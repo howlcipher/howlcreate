@@ -1,0 +1,1408 @@
+{
+  "run_id": "run-0fa46716",
+  "problem": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+  "created_at": "2026-09-07T01:03:51.172422+00:00",
+  "completed_at": "2026-09-07T01:03:51.190073+00:00",
+  "config": {
+    "provider": "deterministic-engine-v1",
+    "provider_type": "DeterministicProvider",
+    "top_n": 3,
+    "similarity_threshold": 0.52
+  },
+  "assumptions": [
+    {
+      "id": "asm-d223db",
+      "statement": "The problem must be resolved by human coordinators synchronously.",
+      "is_implicit": true,
+      "inversions": [
+        "Coordination happens asynchronously via state-based eventual consistency.",
+        "Autonomous micro-agents negotiate contracts without human mediation."
+      ],
+      "vulnerability": "Breaks under high latency and timezone fragmentation."
+    },
+    {
+      "id": "asm-1e1c9f",
+      "statement": "Centralized authority is required to verify quality of work.",
+      "is_implicit": false,
+      "inversions": [
+        "Quality is verified by automated mathematical proofs and test suites.",
+        "Reputation is bonded in bilateral escrow rather than platform-policed."
+      ],
+      "vulnerability": "Creates an administrative bottleneck and platform extraction rent."
+    }
+  ],
+  "reframings": [
+    {
+      "lens_id": "lens-edd902",
+      "perspective": "Adversary / Opportunist",
+      "reframed_question": "How could an untrusted anonymous entity extract bounties maliciously?",
+      "core_focus": "Trust minimization and adversarial hardening."
+    },
+    {
+      "lens_id": "lens-21aaf5",
+      "perspective": "Resource-Constrained Contributor",
+      "reframed_question": "How can valuable engineering happen with intermittent power and zero cloud credits?",
+      "core_focus": "Offline-first computation and tiny compute footprints."
+    }
+  ],
+  "graph": {
+    "nodes": {
+      "idea-9a310b": {
+        "id": "idea-9a310b",
+        "title": "Asynchronous State-Settled Work Mesh (3d0405)",
+        "description": "Workers interact with an immutable state machine that releases escrow upon deterministic proof execution.",
+        "problem_framing": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+        "core_mechanism": "Elimination of human dispatchers via reproducible HFIR verification.",
+        "operator_used": "assumption_operator",
+        "parent_ids": [],
+        "origin": "assumption_inversion",
+        "epistemic_status": "HYPOTHESIS",
+        "assumptions": [
+          "The problem must be resolved by human coordinators synchronously.",
+          "Centralized authority is required to verify quality of work."
+        ],
+        "changed_assumptions": [
+          "Assumed human review -> replaced by test proofs"
+        ],
+        "constraints": [],
+        "analogies": [],
+        "speculations": [
+          "Workers will prefer instant settlement over periodic paychecks"
+        ],
+        "evidence_needs": [
+          "Latency benchmarks of proof evaluation"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [
+          "Vulnerable to sybil attacks if proof complexity is low.",
+          "High cognitive onboarding barrier for non-technical contributors.",
+          "Arbitration costs for ambiguous task definitions."
+        ],
+        "mutations": [],
+        "status": "FINALIST",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-1",
+        "created_at": "2026-09-07T01:03:51.172899+00:00"
+      },
+      "idea-63e090": {
+        "id": "idea-63e090",
+        "title": "Adversary-Hardened Proof Escrow (3d0d90)",
+        "description": "Bounties staked behind formal verification barriers that prevent sybil attacks.",
+        "problem_framing": "Adversary / Opportunist",
+        "core_mechanism": "Cryptographic slashing for invalid state transitions.",
+        "operator_used": "reframing_operator",
+        "parent_ids": [],
+        "origin": "reframe:Adversary / Opportunist",
+        "epistemic_status": "IMAGINED_POSSIBILITY",
+        "assumptions": [],
+        "changed_assumptions": [],
+        "constraints": [],
+        "analogies": [],
+        "speculations": [
+          "Adversarial bounties will incentivize white-hat fuzzing"
+        ],
+        "evidence_needs": [
+          "Game-theoretic equilibrium analysis"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [],
+        "mutations": [],
+        "status": "FINALIST",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-2",
+        "created_at": "2026-09-07T01:03:51.173097+00:00"
+      },
+      "idea-24e27a": {
+        "id": "idea-24e27a",
+        "title": "Decentralized Task Registry (7f3bac-A)",
+        "description": "An open distributed registry where engineering tasks are published as reproducible verification fixtures.",
+        "problem_framing": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+        "core_mechanism": "Verifiable task execution logs evaluated by sovereign worker nodes.",
+        "operator_used": "branching_structural architect",
+        "parent_ids": [],
+        "origin": "branch:structural architect",
+        "epistemic_status": "IMAGINED_POSSIBILITY",
+        "assumptions": [
+          "Tasks can be formally verified"
+        ],
+        "changed_assumptions": [],
+        "constraints": [],
+        "analogies": [],
+        "speculations": [
+          "Massive talent pool expansion"
+        ],
+        "evidence_needs": [
+          "Sandboxing verification overhead"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [],
+        "mutations": [],
+        "status": "FINALIST",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-3",
+        "created_at": "2026-09-07T01:03:51.173248+00:00"
+      },
+      "idea-052253": {
+        "id": "idea-052253",
+        "title": "Mutual Credit Engineering Guilds (7f3bac-B)",
+        "description": "Sovereign developer clusters pooling liquidity and trading micro-commitments without corporate intermediaries.",
+        "problem_framing": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+        "core_mechanism": "Bilateral credit rings with cryptographic dispute resolution.",
+        "operator_used": "branching_structural architect",
+        "parent_ids": [],
+        "origin": "branch:structural architect",
+        "epistemic_status": "IMAGINED_POSSIBILITY",
+        "assumptions": [
+          "Mutual trust can be bootstrapped locally"
+        ],
+        "changed_assumptions": [],
+        "constraints": [],
+        "analogies": [],
+        "speculations": [
+          "Guilds will outcompete centralized software houses"
+        ],
+        "evidence_needs": [
+          "Credit ring default rate simulation"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [],
+        "mutations": [],
+        "status": "SET_ASIDE",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-4",
+        "created_at": "2026-09-07T01:03:51.173268+00:00"
+      },
+      "idea-d31ef3": {
+        "id": "idea-d31ef3",
+        "title": "Decentralized Task Registry (19e17b-A)",
+        "description": "An open distributed registry where engineering tasks are published as reproducible verification fixtures.",
+        "problem_framing": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+        "core_mechanism": "Verifiable task execution logs evaluated by sovereign worker nodes.",
+        "operator_used": "branching_incentive & micro-economy designer",
+        "parent_ids": [],
+        "origin": "branch:incentive & micro-economy designer",
+        "epistemic_status": "IMAGINED_POSSIBILITY",
+        "assumptions": [
+          "Tasks can be formally verified"
+        ],
+        "changed_assumptions": [],
+        "constraints": [],
+        "analogies": [],
+        "speculations": [
+          "Massive talent pool expansion"
+        ],
+        "evidence_needs": [
+          "Sandboxing verification overhead"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [],
+        "mutations": [],
+        "status": "SET_ASIDE",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-3",
+        "created_at": "2026-09-07T01:03:51.173407+00:00"
+      },
+      "idea-05baab": {
+        "id": "idea-05baab",
+        "title": "Mutual Credit Engineering Guilds (19e17b-B)",
+        "description": "Sovereign developer clusters pooling liquidity and trading micro-commitments without corporate intermediaries.",
+        "problem_framing": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+        "core_mechanism": "Bilateral credit rings with cryptographic dispute resolution.",
+        "operator_used": "branching_incentive & micro-economy designer",
+        "parent_ids": [],
+        "origin": "branch:incentive & micro-economy designer",
+        "epistemic_status": "IMAGINED_POSSIBILITY",
+        "assumptions": [
+          "Mutual trust can be bootstrapped locally"
+        ],
+        "changed_assumptions": [],
+        "constraints": [],
+        "analogies": [],
+        "speculations": [
+          "Guilds will outcompete centralized software houses"
+        ],
+        "evidence_needs": [
+          "Credit ring default rate simulation"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [],
+        "mutations": [],
+        "status": "SET_ASIDE",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-4",
+        "created_at": "2026-09-07T01:03:51.173429+00:00"
+      },
+      "idea-ca392e": {
+        "id": "idea-ca392e",
+        "title": "Zero-Bandwidth Sneakernet Ledger (81cb8d)",
+        "description": "Work and bounty proofs exchanged physically via QR codes or local Wi-Fi direct.",
+        "problem_framing": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+        "core_mechanism": "Delay-tolerant Merkle synchronization.",
+        "operator_used": "constraint_mutator",
+        "parent_ids": [
+          "idea-9a310b",
+          "idea-63e090"
+        ],
+        "origin": "constraint:Completely Offline /",
+        "epistemic_status": "IMAGINED_POSSIBILITY",
+        "assumptions": [],
+        "changed_assumptions": [],
+        "constraints": [
+          "Completely Offline / Zero Internet"
+        ],
+        "analogies": [],
+        "speculations": [
+          "Applicable to rural and disconnected communities"
+        ],
+        "evidence_needs": [
+          "Sync latency benchmarks"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [],
+        "mutations": [
+          "Constraint Mutation: Completely Offline / Zero Internet"
+        ],
+        "status": "SET_ASIDE",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-5",
+        "created_at": "2026-09-07T01:03:51.173583+00:00"
+      },
+      "idea-70888b": {
+        "id": "idea-70888b",
+        "title": "Mycelial Nutrient Routing Network (f0410c)",
+        "description": "Tasks flow towards nodes with excess compute capacity like sugar along fungal hyphae.",
+        "problem_framing": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+        "core_mechanism": "Gradient-based demand routing.",
+        "operator_used": "analogical_reasoning",
+        "parent_ids": [],
+        "origin": "analogy:biology & mycology",
+        "epistemic_status": "ANALOGY",
+        "assumptions": [],
+        "changed_assumptions": [],
+        "constraints": [],
+        "analogies": [
+          "Biology & Mycology: Fungal networks route resources dynamically based on local nutrient gradients without central control."
+        ],
+        "speculations": [
+          "Prevents compute bottlenecks organically"
+        ],
+        "evidence_needs": [
+          "Simulated network flow equilibrium"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [],
+        "mutations": [],
+        "status": "SET_ASIDE",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-6",
+        "created_at": "2026-09-07T01:03:51.173724+00:00"
+      },
+      "idea-a4dfb1": {
+        "id": "idea-a4dfb1",
+        "title": "1-Second Micro-Task Auction (1da73b)",
+        "description": "Work broken into sub-second atomic instructions solved by distributed agents.",
+        "problem_framing": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+        "core_mechanism": "Ultra-fine-grained task pipelining.",
+        "operator_used": "extreme_solutions",
+        "parent_ids": [],
+        "origin": "extreme:Task duration reduce",
+        "epistemic_status": "IMAGINED_POSSIBILITY",
+        "assumptions": [],
+        "changed_assumptions": [],
+        "constraints": [],
+        "analogies": [],
+        "speculations": [
+          "Eliminates traditional project management entirely"
+        ],
+        "evidence_needs": [
+          "Pipelining latency overhead measurement"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [],
+        "mutations": [
+          "Underlying Principle: Decomposition reduces review cost to zero."
+        ],
+        "status": "SET_ASIDE",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-7",
+        "created_at": "2026-09-07T01:03:51.173810+00:00"
+      },
+      "idea-35cd67": {
+        "id": "idea-35cd67",
+        "title": "Self-Verifying Deliverable Contracts (1cb711)",
+        "description": "The specification itself compiles into an executable test suite; passing it automatically settles the contract.",
+        "problem_framing": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+        "core_mechanism": "Specification as execution arbiter.",
+        "operator_used": "simplification_operator",
+        "parent_ids": [],
+        "origin": "simplification:dissolve",
+        "epistemic_status": "IMAGINED_POSSIBILITY",
+        "assumptions": [],
+        "changed_assumptions": [],
+        "constraints": [],
+        "analogies": [],
+        "speculations": [
+          "Removes 90% of contract dispute friction"
+        ],
+        "evidence_needs": [
+          "Coverage of specification language"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [],
+        "mutations": [
+          "Eliminated requirement: Eliminated the need for human managers and milestone negotiations"
+        ],
+        "status": "SET_ASIDE",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-8",
+        "created_at": "2026-09-07T01:03:51.173913+00:00"
+      },
+      "idea-2a51f5": {
+        "id": "idea-2a51f5",
+        "title": "Reputation Bonds Replacing Traditional Employment (afd93d)",
+        "description": "Workers draw continuous streams based on verifiable test coverage and maintenance proofs.",
+        "problem_framing": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+        "core_mechanism": "Automated reputation streaming.",
+        "operator_used": "substitution_operator",
+        "parent_ids": [],
+        "origin": "substitution:Cryptographic reputa",
+        "epistemic_status": "IMAGINED_POSSIBILITY",
+        "assumptions": [],
+        "changed_assumptions": [],
+        "constraints": [],
+        "analogies": [],
+        "speculations": [
+          "Outperforms traditional corporate equity vesting"
+        ],
+        "evidence_needs": [
+          "Economic simulation of worker cash-flow stability"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [],
+        "mutations": [
+          "Substituted 'Traditional hourly salary and performance reviews' with 'Cryptographic reputation escrow bonded to verified software releases'"
+        ],
+        "status": "SET_ASIDE",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-9",
+        "created_at": "2026-09-07T01:03:51.174027+00:00"
+      },
+      "idea-abc359": {
+        "id": "idea-abc359",
+        "title": "Hybrid Sovereign Escrow Guild (9ac2f5)",
+        "description": "Emergent integration combining bilateral escrow staking with delay-tolerant synchronization.",
+        "problem_framing": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+        "core_mechanism": "Offline-ready verifiable work settlement.",
+        "operator_used": "forced_combination",
+        "parent_ids": [
+          "idea-9a310b",
+          "idea-63e090"
+        ],
+        "origin": "combination:idea-9a310b+idea-63e090",
+        "epistemic_status": "IMAGINED_POSSIBILITY",
+        "assumptions": [],
+        "changed_assumptions": [],
+        "constraints": [],
+        "analogies": [],
+        "speculations": [
+          "High adoption in emerging markets"
+        ],
+        "evidence_needs": [
+          "Field tests in offline environments"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [],
+        "mutations": [
+          "Combined 'Asynchronous State-Settled Work Mesh (3d0405)' with 'Adversary-Hardened Proof Escrow (3d0d90)'"
+        ],
+        "status": "SET_ASIDE",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-10",
+        "created_at": "2026-09-07T01:03:51.174179+00:00"
+      },
+      "idea-c7a7be": {
+        "id": "idea-c7a7be",
+        "title": "Hardened Bilateral Stake Mesh (a26681)",
+        "description": "Reinforced coordination architecture requiring dual-bonded collateral before task claim.",
+        "problem_framing": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+        "core_mechanism": "Automated proof verification backed by bilateral collateral pools.",
+        "operator_used": "adversarial_critique",
+        "parent_ids": [
+          "idea-9a310b"
+        ],
+        "origin": "hardened:idea-9a310b",
+        "epistemic_status": "HYPOTHESIS",
+        "assumptions": [],
+        "changed_assumptions": [],
+        "constraints": [],
+        "analogies": [],
+        "speculations": [
+          "Collateral requirements will eliminate 99% of spam"
+        ],
+        "evidence_needs": [
+          "Capital efficiency metrics under low liquidity"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [],
+        "mutations": [
+          "Introduce bilateral stake slashing for frivolous disputes.",
+          "Require reproducible local test environments before task publication.",
+          "Collateral slashing",
+          "Deterministic sandbox containment"
+        ],
+        "status": "SET_ASIDE",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-11",
+        "created_at": "2026-09-07T01:03:51.174315+00:00"
+      },
+      "idea-6b7a31": {
+        "id": "idea-6b7a31",
+        "title": "Second-Order Macro Stabilizer (274284)",
+        "description": "Dynamic reserve pool that subsidizes niche, highly technical open-source components.",
+        "problem_framing": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+        "core_mechanism": "Quadratic funding reserves.",
+        "operator_used": "second_order_explorer",
+        "parent_ids": [
+          "idea-9a310b"
+        ],
+        "origin": "second_order:idea-9a310b",
+        "epistemic_status": "PREDICTION",
+        "assumptions": [],
+        "changed_assumptions": [],
+        "constraints": [],
+        "analogies": [],
+        "speculations": [
+          "Sustains long-term maintainers"
+        ],
+        "evidence_needs": [
+          "Quadratic funding simulation"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [],
+        "mutations": [
+          "Anticipated shift: Market saturation causes micro-bounty race to the bottom"
+        ],
+        "status": "SET_ASIDE",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-12",
+        "created_at": "2026-09-07T01:03:51.174450+00:00"
+      },
+      "idea-e5f771": {
+        "id": "idea-e5f771",
+        "title": "Unified Autonomous Guild Protocol (81af1e)",
+        "description": "An integrated architecture combining offline test-driven bounties with bilateral reputation staking.",
+        "problem_framing": "What capabilities could make HowlCreate fundamentally better at machine-assisted creativity than conventional brainstorming tools?",
+        "core_mechanism": "Multi-agent proof settlement mediated by local verifiable runtime nodes.",
+        "operator_used": "synthesis_operator",
+        "parent_ids": [
+          "idea-9a310b",
+          "idea-63e090"
+        ],
+        "origin": "synthesis:idea-9a310b+idea-63e090",
+        "epistemic_status": "HYPOTHESIS",
+        "assumptions": [],
+        "changed_assumptions": [],
+        "constraints": [],
+        "analogies": [],
+        "speculations": [
+          "Decentralized guilds will organically form specialized niches"
+        ],
+        "evidence_needs": [
+          "High-concurrency load testing on peer network"
+        ],
+        "unanswered_questions": [],
+        "criticisms": [],
+        "mutations": [
+          "Synthesized strengths: Merges cryptographic security with zero-coordination asynchrony."
+        ],
+        "status": "SET_ASIDE",
+        "evaluations": [
+          {
+            "evaluator_id": "evaluator_primary",
+            "scores": {
+              "novelty": {
+                "dimension": "novelty",
+                "score": 0.85,
+                "rationale": "Radically rejects conventional marketplace structures.",
+                "uncertainty": 0.15
+              },
+              "feasibility": {
+                "dimension": "feasibility",
+                "score": 0.78,
+                "rationale": "Can be implemented using existing cryptographic and test primitives.",
+                "uncertainty": 0.2
+              },
+              "usefulness": {
+                "dimension": "usefulness",
+                "score": 0.9,
+                "rationale": "Solves real sovereignty and economic coordination frictions.",
+                "uncertainty": 0.1
+              },
+              "simplicity": {
+                "dimension": "simplicity",
+                "score": 0.72,
+                "rationale": "Clear core architecture with manageable edge cases.",
+                "uncertainty": 0.25
+              },
+              "strategic_fit": {
+                "dimension": "strategic_fit",
+                "score": 0.95,
+                "rationale": "Directly empowers the Howl ecosystem boundary.",
+                "uncertainty": 0.05
+              }
+            },
+            "strengths": [
+              "Autonomous verification",
+              "Sovereign local-first execution"
+            ],
+            "weaknesses": [
+              "Requires shift in mental model"
+            ],
+            "critical_risks": [
+              "Adoption friction if CLI is too complex"
+            ],
+            "composite_score": 0.847
+          }
+        ],
+        "cluster_id": "cluster-13",
+        "created_at": "2026-09-07T01:03:51.174613+00:00"
+      }
+    },
+    "edges": [
+      {
+        "parent_id": "idea-9a310b",
+        "child_id": "idea-ca392e",
+        "operator": "constraint_mutator",
+        "rationale": ""
+      },
+      {
+        "parent_id": "idea-63e090",
+        "child_id": "idea-ca392e",
+        "operator": "constraint_mutator",
+        "rationale": ""
+      },
+      {
+        "parent_id": "idea-9a310b",
+        "child_id": "idea-abc359",
+        "operator": "forced_combination",
+        "rationale": ""
+      },
+      {
+        "parent_id": "idea-63e090",
+        "child_id": "idea-abc359",
+        "operator": "forced_combination",
+        "rationale": ""
+      },
+      {
+        "parent_id": "idea-9a310b",
+        "child_id": "idea-c7a7be",
+        "operator": "adversarial_critique",
+        "rationale": ""
+      },
+      {
+        "parent_id": "idea-9a310b",
+        "child_id": "idea-6b7a31",
+        "operator": "second_order_explorer",
+        "rationale": ""
+      },
+      {
+        "parent_id": "idea-9a310b",
+        "child_id": "idea-e5f771",
+        "operator": "synthesis_operator",
+        "rationale": ""
+      },
+      {
+        "parent_id": "idea-63e090",
+        "child_id": "idea-e5f771",
+        "operator": "synthesis_operator",
+        "rationale": ""
+      }
+    ]
+  },
+  "finalist_ids": [
+    "idea-9a310b",
+    "idea-63e090",
+    "idea-24e27a"
+  ],
+  "decisions": {
+    "idea-9a310b": {
+      "idea_id": "idea-9a310b",
+      "status": "FINALIST",
+      "rationale": "Selected as top finalist (composite score: 0.85). Demonstrated distinct strategic mechanism in cluster-1 with superior balance of novelty and feasibility.",
+      "strengths_emphasized": [
+        "Autonomous verification",
+        "Sovereign local-first execution"
+      ],
+      "risks_noted": [
+        "Adoption friction if CLI is too complex"
+      ]
+    },
+    "idea-63e090": {
+      "idea_id": "idea-63e090",
+      "status": "FINALIST",
+      "rationale": "Selected as top finalist (composite score: 0.85). Demonstrated distinct strategic mechanism in cluster-2 with superior balance of novelty and feasibility.",
+      "strengths_emphasized": [
+        "Autonomous verification",
+        "Sovereign local-first execution"
+      ],
+      "risks_noted": [
+        "Adoption friction if CLI is too complex"
+      ]
+    },
+    "idea-24e27a": {
+      "idea_id": "idea-24e27a",
+      "status": "FINALIST",
+      "rationale": "Selected as top finalist (composite score: 0.85). Demonstrated distinct strategic mechanism in cluster-3 with superior balance of novelty and feasibility.",
+      "strengths_emphasized": [
+        "Autonomous verification",
+        "Sovereign local-first execution"
+      ],
+      "risks_noted": [
+        "Adoption friction if CLI is too complex"
+      ]
+    },
+    "idea-052253": {
+      "idea_id": "idea-052253",
+      "status": "SET_ASIDE",
+      "rationale": "Set aside (score: 0.85). Alternative concept in cluster-4 provided stronger feasibility or clearer verification boundaries.",
+      "strengths_emphasized": [],
+      "risks_noted": []
+    },
+    "idea-d31ef3": {
+      "idea_id": "idea-d31ef3",
+      "status": "SET_ASIDE",
+      "rationale": "Set aside (score: 0.85). Alternative concept in cluster-3 provided stronger feasibility or clearer verification boundaries.",
+      "strengths_emphasized": [],
+      "risks_noted": []
+    },
+    "idea-05baab": {
+      "idea_id": "idea-05baab",
+      "status": "SET_ASIDE",
+      "rationale": "Set aside (score: 0.85). Alternative concept in cluster-4 provided stronger feasibility or clearer verification boundaries.",
+      "strengths_emphasized": [],
+      "risks_noted": []
+    },
+    "idea-ca392e": {
+      "idea_id": "idea-ca392e",
+      "status": "SET_ASIDE",
+      "rationale": "Set aside (score: 0.85). Alternative concept in cluster-5 provided stronger feasibility or clearer verification boundaries.",
+      "strengths_emphasized": [],
+      "risks_noted": []
+    },
+    "idea-70888b": {
+      "idea_id": "idea-70888b",
+      "status": "SET_ASIDE",
+      "rationale": "Set aside (score: 0.85). Alternative concept in cluster-6 provided stronger feasibility or clearer verification boundaries.",
+      "strengths_emphasized": [],
+      "risks_noted": []
+    },
+    "idea-a4dfb1": {
+      "idea_id": "idea-a4dfb1",
+      "status": "SET_ASIDE",
+      "rationale": "Set aside (score: 0.85). Alternative concept in cluster-7 provided stronger feasibility or clearer verification boundaries.",
+      "strengths_emphasized": [],
+      "risks_noted": []
+    },
+    "idea-35cd67": {
+      "idea_id": "idea-35cd67",
+      "status": "SET_ASIDE",
+      "rationale": "Set aside (score: 0.85). Alternative concept in cluster-8 provided stronger feasibility or clearer verification boundaries.",
+      "strengths_emphasized": [],
+      "risks_noted": []
+    },
+    "idea-2a51f5": {
+      "idea_id": "idea-2a51f5",
+      "status": "SET_ASIDE",
+      "rationale": "Set aside (score: 0.85). Alternative concept in cluster-9 provided stronger feasibility or clearer verification boundaries.",
+      "strengths_emphasized": [],
+      "risks_noted": []
+    },
+    "idea-abc359": {
+      "idea_id": "idea-abc359",
+      "status": "SET_ASIDE",
+      "rationale": "Set aside (score: 0.85). Alternative concept in cluster-10 provided stronger feasibility or clearer verification boundaries.",
+      "strengths_emphasized": [],
+      "risks_noted": []
+    },
+    "idea-c7a7be": {
+      "idea_id": "idea-c7a7be",
+      "status": "SET_ASIDE",
+      "rationale": "Set aside (score: 0.85). Alternative concept in cluster-11 provided stronger feasibility or clearer verification boundaries.",
+      "strengths_emphasized": [],
+      "risks_noted": []
+    },
+    "idea-6b7a31": {
+      "idea_id": "idea-6b7a31",
+      "status": "SET_ASIDE",
+      "rationale": "Set aside (score: 0.85). Alternative concept in cluster-12 provided stronger feasibility or clearer verification boundaries.",
+      "strengths_emphasized": [],
+      "risks_noted": []
+    },
+    "idea-e5f771": {
+      "idea_id": "idea-e5f771",
+      "status": "SET_ASIDE",
+      "rationale": "Set aside (score: 0.85). Alternative concept in cluster-13 provided stronger feasibility or clearer verification boundaries.",
+      "strengths_emphasized": [],
+      "risks_noted": []
+    }
+  },
+  "metadata": {}
+}

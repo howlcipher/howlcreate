@@ -25,7 +25,7 @@ from howlcreate.providers.registry import registry
 
 def _print_step(phase: str, payload: dict) -> None:
     if phase == "phase":
-        print(f"  [>] {payload.get('name')}...")
+        print(f"  [>] {payload.get('name')}...", flush=True)
     elif phase == "start":
         print(f"\n[HowlCreate] Initializing creative run: {payload.get('run_id')}")
         print(f"  Problem: \"{payload.get('problem')}\"\n")
