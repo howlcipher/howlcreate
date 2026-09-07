@@ -40,7 +40,11 @@ HowlCreate is the computational creativity and open-ended problem-solving layer 
 
 ## 3. What Is in Progress / Known Limitations
 
-- **Dogfood Runs**: Dogfood Target 1 (`run-64f4d1d9`, 29 concepts) completed and preserved under `dogfood/`. Dogfood Target 2 (self-architecture challenge) is next.
+- **Dogfood Runs**:
+  - Target 1: `01_remote_work_opportunities.json` / `.md` (run `run-64f4d1d9`, 29 concepts) — Completed.
+  - Target 2: `02_self_architecture.json` / `.md` (run `run-0fa46716`, 26 concepts) — Completed.
+  - Target 3: `03_cross_repo_dogfood.json` / `.md` (run `run-3c13e4f4`, 26 concepts) — Completed.
+- **Identified Coordination Defect in HowlRelay**: HowlRelay's `ContinuityCollector` failed to extract structured handoff context from HowlCreate's numbered markdown sections. Addressing in HowlRelay.
 - **Model Latency**: Local 7B model generation across 10 distinct phases takes ~3-4 minutes on Ollama. For quick checks, use `--provider deterministic`.
 - **Vector Embeddings**: Near-duplicate clustering currently uses fast unigram Jaccard + Cosine token matching. A future milestone will add optional local embedding support.
 

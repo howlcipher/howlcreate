@@ -105,3 +105,22 @@ A strict architectural boundary was established:
 - **Lineage Integrity**: The lineage tree clearly reveals derivation paths (e.g. `Cultural Integration` -> `Culturally Informed Flexible Work Arrangements` via forced combination).
 - **Adversarial Critique & Hardening**: Hardened mutations were generated addressing miscommunication risks in hybrid workflows.
 - **Improvement Target**: The local 7B model scored dimensions with uniform granularity (0.80 / 0.70 / 0.90). Future iterations will refine the scoring prompt to require sharper relative contrast between competing concepts.
+
+---
+
+## 6. Dogfood Target 3 Analysis (HowlCreate & HowlRelay Cross-Repo Dogfood)
+
+- **Input Question**: *"How can HowlCreate and HowlRelay dogfood each other so that creative problem solving becomes more useful while engineering continuity becomes more reliable, without creating tight coupling or duplicating HowlPlane?"*
+- **Execution Run ID**: `run-3c13e4f4` (Ollama provider with `qwen2.5-coder:7b-instruct`)
+- **Total Concepts Explored**: 26 across 10 divergent phases
+- **Selected Finalists**:
+  1. `idea-a64952`: **Decentralized Data Management** (Replacing HowlPlane with distributed file storage to eliminate single points of failure; composite score 0.795)
+  2. `idea-b00b2d`: **Security Audit and Vulnerability Exploitation** (Conducting continuous adversarial fuzzing and bug bounty audits; composite score 0.795)
+  3. `idea-78b3e7`: **Resource-Optimized Design** (Operating with minimal overhead, efficient data structures, and local-first execution; composite score 0.795)
+
+### Key Observations & Coordination Defect in HowlRelay:
+1. **Convergence Metric Granularity**: All 26 generated concepts collapsed to virtually identical scores (~0.80), leading to flat candidate selection.
+2. **Ecosystem Boundary Confusion**: Finalist 1 suggested replacing HowlPlane with HDFS/GlusterFS, violating the ecosystem boundary constraint specified in the prompt.
+3. **HowlRelay Continuity Parsing Failure**: Running `howlrelay handoff --repo ../howlcreate` completely failed to extract objectives, completed work, active work, and starting commands from `HANDOFF.md` because `ContinuityCollector` in HowlRelay strictly expected unnumbered exact markdown headers (`#+ Objective`) and hardcoded exact names, failing on numbered sections (`## 1. System Summary`, `## 2. What Works Right Now`, `## 5. Commands to Resume Work`).
+4. **Preserved Artifacts**: Saved full run in `dogfood/03_cross_repo_dogfood.json` and report in `dogfood/03_cross_repo_dogfood.md`.
+
