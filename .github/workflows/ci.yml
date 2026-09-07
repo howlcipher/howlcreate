@@ -48,3 +48,6 @@ jobs:
 
       - name: Run test suite
         run: pytest -v
+
+      - name: Verify SEO Metadata & Artifacts
+        run: python3 scripts/test_seo.py
