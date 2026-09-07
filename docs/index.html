@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="HowlCreate is the computational creativity, ideation, and open-ended problem-solving layer of the Howl ecosystem, turning ambiguous challenges into lineage-tracked concepts.">
+    <meta name="description" content="HowlCreate is the computational creativity and ideation layer of the Howl ecosystem, turning ambiguous engineering problems into lineage-tracked concepts.">
     <link rel="canonical" href="https://howlcipher.github.io/howlcreate/">
 
     <!-- Open Graph Metadata -->
@@ -23,6 +23,30 @@
     <meta name="twitter:description" content="What could we do? Multi-operator creative search, assumption challenging, lateral exploration, and concept lineage before execution planning.">
     <meta name="twitter:image" content="https://howlcipher.github.io/howlcreate/social-preview.png">
     <meta name="twitter:image:alt" content="HowlCreate computational creativity and concept lineage preview card">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "HowlCreate",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "POSIX, Linux, macOS",
+      "description": "Computational creativity and ideation layer turning ambiguous challenges into lineage-tracked concepts through multi-operator search and assumption challenging.",
+      "url": "https://howlcipher.github.io/howlcreate/",
+      "softwareVersion": "0.1.0-dev",
+      "author": {
+        "@type": "Person",
+        "name": "William Elias",
+        "url": "https://howlcipher.github.io/william_elias/"
+      },
+      "isPartOf": {
+        "@type": "SoftwareApplication",
+        "name": "Howl Autonomous Software Engineering Ecosystem",
+        "url": "https://howlcipher.github.io/howl/"
+      }
+    }
+    </script>
 
     <title>HowlCreate | Computational Creativity &amp; Ideation Layer</title>
     <link rel="stylesheet" href="style.css">
@@ -115,7 +139,7 @@
             </a>
         </div>
         <div class="drawer-footer">
-            <span>● 8 PRODUCTION &amp; CONTINUITY NODES</span>
+            <span>● 9 PRODUCTION NODES</span>
             <span>AUTH // HOWL 2026</span>
         </div>
     </aside>
@@ -148,6 +172,7 @@
                 <a href="#why-create">02_WhyItExists</a>
                 <a href="#boundary">03_HowlPlaneBoundary</a>
                 <a href="#operators">04_CreativeOperators</a>
+                <a href="#ideation-qa">04B_IdeationFAQ</a>
                 <a href="#pipeline">05_ExplorationWorkflow</a>
                 <a href="#status-cli">06_StatusAndCLI</a>
             </nav>
@@ -166,7 +191,7 @@
                         <p class="hero-kicker">// creative reasoning / open-ended exploration / concept lineage</p>
                         <h1 id="main-title" class="hero-title">HowlCreate <span class="jp-sub">クリエイト // 2026</span></h1>
                         <p class="hero-lead">
-                            HowlCreate helps turn imagination, ideas, ambiguity, and open-ended problems into rigorous concepts that can be explored, refined, challenged, and handed into the rest of the Howl ecosystem.
+                            Designed and engineered by <a href="https://howlcipher.github.io/william_elias/" style="color: var(--color-amber); text-decoration: underline;">William Elias</a> as part of the <a href="https://howlcipher.github.io/howl/" style="color: var(--color-amber); text-decoration: underline;">Howl Ecosystem</a>, HowlCreate helps turn imagination, ideas, ambiguity, and open-ended problems into rigorous concepts that can be explored, refined, challenged, and handed into the rest of the Howl ecosystem.
                         </p>
                     </div>
 
@@ -363,6 +388,42 @@
                 </div>
             </section>
 
+            <!-- 04B Computational Creativity & Speculative Ideation Q&A -->
+            <section id="ideation-qa" class="tech-panel">
+                <div class="tech-header">
+                    <h2><span class="sec-id">SECTION // 04B</span> Technical Q&amp;A: Computational Creativity &amp; Speculative Ideation</h2>
+                    <span class="subsystem-tag">HCRT-MOD-CREATIVE-QA</span>
+                </div>
+                <div class="tech-body">
+                    <div class="faq-group">
+                        <div class="faq-item" style="margin-bottom: 1.5rem; padding: 1rem; border-left: 3px solid var(--color-amber); background: var(--color-surface);">
+                            <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--color-amber);">How does computational creativity differ from random LLM brainstorming?</h3>
+                            <p>
+                                Standard LLM prompting produces superficial, consensus-biased ideas that mimic the training distribution's most frequent answers. Computational creativity in HowlCreate introduces structured search operators: explicit premise extraction, constraint relaxation, morphological cross-domain synthesis, and formal fitness evaluation. Rather than accepting the first plausible completion, HowlCreate maps the conceptual search space systematically.
+                            </p>
+                        </div>
+                        <div class="faq-item" style="margin-bottom: 1.5rem; padding: 1rem; border-left: 3px solid var(--color-blue); background: var(--color-surface);">
+                            <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--color-blue);">Why is concept lineage and assumption inversion critical before execution planning?</h3>
+                            <p>
+                                When software engineering tasks are handed directly to execution agents without rigorous problem framing, agents optimize for the wrong goals or build fragile workarounds around false constraints. By logging explicit concept lineage DAGs and inverting implicit premises (e.g. questioning whether agents need direct git push rights), engineers uncover fundamentally simpler architectural paradigms before a single line of production code is written.
+                            </p>
+                        </div>
+                        <div class="faq-item" style="margin-bottom: 1.5rem; padding: 1rem; border-left: 3px solid var(--color-green); background: var(--color-surface);">
+                            <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--color-green);">How does HowlCreate isolate speculative prototypes from production control planes?</h3>
+                            <p>
+                                HowlCreate possesses zero mutation authority over production git branches, release gates, or repository remotes. Its outputs are purely epistemic artifacts: lineage trees, assumption registers, and evaluated concept proposals. These concepts must undergo independent human review and pass into HowlPlane and HowlChangeOps before becoming executable task plans.
+                            </p>
+                        </div>
+                        <div class="faq-item" style="margin-bottom: 1.5rem; padding: 1rem; border-left: 3px solid var(--color-red); background: var(--color-surface);">
+                            <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--color-red);">What role do divergent operators play in safe autonomous software engineering?</h3>
+                            <p>
+                                Divergent operators force the generation of mutually isolated solution candidates across orthogonal architectural axes. This prevents premature convergence on local optima and enables adversarial falsifiers to stress-test radically different approaches against operational risk, latency, and maintainability metrics.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- 05 Exploration Workflow -->
             <section id="pipeline" class="tech-panel">
                 <div class="tech-header">
@@ -455,6 +516,7 @@ pytest -v</code></pre>
             </div>
             <div class="footer-links">
                 <nav class="footer-nav" aria-label="Ecosystem Links">
+                    <a href="https://howlcipher.github.io/william_elias/">William Elias Portfolio</a>
                     <a href="https://howlcipher.github.io/howl/">Howl Hub</a>
                     <a href="https://howlcipher.github.io/howlcreate/">HowlCreate</a>
                     <a href="https://howlcipher.github.io/howlframe/">HowlFrame</a>
