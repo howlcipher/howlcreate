@@ -65,15 +65,21 @@ class ConvergenceEngine:
             f"3. usefulness: How substantial is the real-world value or impact?\n"
             f"4. simplicity: Is the mechanism elegant and minimal, or overcomplicated?\n"
             f"5. strategic_fit: Does this align with the sovereign, verifiable goals of the Howl ecosystem?\n\n"
+            f"CALIBRATION INSTRUCTIONS (Differentiate strictly across the 0.0 - 1.0 range):\n"
+            f"- DO NOT assign uniform scores (e.g. all 0.7 or 0.8). Evaluate each dimension independently.\n"
+            f"- Ideas with high complexity, ungrounded claims, or sybil risks MUST score low on feasibility/simplicity (0.2-0.5).\n"
+            f"- Obvious, generic, or conventional proposals MUST score low on novelty (0.1-0.4).\n"
+            f"- Off-target or irrelevant concepts MUST score low on usefulness/strategic_fit (0.1-0.4).\n"
+            f"- Reserve high scores (>= 0.85) strictly for genuinely exceptional, defensible concepts.\n\n"
             f"For each score, provide uncertainty (0.0 = high confidence, 1.0 = highly uncertain estimate).\n\n"
-            f"Return valid JSON:\n"
+            f"Return valid JSON with differentiated numbers:\n"
             f"{{\n"
             f'  "scores": {{\n'
-            f'    "novelty": {{"score": 0.8, "rationale": "...", "uncertainty": 0.2}},\n'
-            f'    "feasibility": {{"score": 0.7, "rationale": "...", "uncertainty": 0.2}},\n'
-            f'    "usefulness": {{"score": 0.9, "rationale": "...", "uncertainty": 0.1}},\n'
-            f'    "simplicity": {{"score": 0.6, "rationale": "...", "uncertainty": 0.3}},\n'
-            f'    "strategic_fit": {{"score": 0.9, "rationale": "...", "uncertainty": 0.1}}\n'
+            f'    "novelty": {{"score": 0.85, "rationale": "...", "uncertainty": 0.15}},\n'
+            f'    "feasibility": {{"score": 0.65, "rationale": "...", "uncertainty": 0.25}},\n'
+            f'    "usefulness": {{"score": 0.90, "rationale": "...", "uncertainty": 0.10}},\n'
+            f'    "simplicity": {{"score": 0.45, "rationale": "...", "uncertainty": 0.30}},\n'
+            f'    "strategic_fit": {{"score": 0.75, "rationale": "...", "uncertainty": 0.20}}\n'
             f'  }},\n'
             f'  "strengths": ["Strength 1", "Strength 2"],\n'
             f'  "weaknesses": ["Weakness 1"],\n'
@@ -152,18 +158,29 @@ class ConvergenceEngine:
 
         finalists: List[Idea] = []
         finalist_ids: set[str] = set()
+        represented_clusters: set[str] = set()
 
-        # Take the top cluster champions up to top_n - 1
-        for champ in sorted_champions[: max(1, self.top_n - 1)]:
-            finalists.append(champ)
-            finalist_ids.add(champ.id)
+        # Take top cluster champions from distinct clusters up to top_n - 1
+        champion_limit = max(1, self.top_n - 1) if len(sorted_champions) > 1 else self.top_n
+        for champ in sorted_champions:
+            champ_cluster = champ.cluster_id or champ.id
+            if champ_cluster not in represented_clusters and len(finalists) < champion_limit:
+                finalists.append(champ)
+                finalist_ids.add(champ.id)
+                represented_clusters.add(champ_cluster)
 
-        # Look for high-novelty wildcard from outliers or remaining pool
-        remaining = [i for i in ideas if i.id not in finalist_ids]
-        if remaining:
-            # Pick idea with highest novelty score
+        # Look for high-novelty wildcard from unrepresented clusters/outliers first
+        remaining_unrepresented = [
+            i for i in ideas
+            if i.id not in finalist_ids and (i.cluster_id or i.id) not in represented_clusters
+        ]
+        pool_for_wildcard = remaining_unrepresented if remaining_unrepresented else [
+            i for i in ideas if i.id not in finalist_ids
+        ]
+
+        if pool_for_wildcard and len(finalists) < self.top_n:
             wildcard = max(
-                remaining,
+                pool_for_wildcard,
                 key=lambda x: max((e.scores.get("novelty", ScoreDetail("novelty", 0.0)).score for e in x.evaluations), default=0.0)
             )
             finalists.append(wildcard)

@@ -124,3 +124,16 @@ A strict architectural boundary was established:
 3. **HowlRelay Continuity Parsing Failure**: Running `howlrelay handoff --repo ../howlcreate` completely failed to extract objectives, completed work, active work, and starting commands from `HANDOFF.md` because `ContinuityCollector` in HowlRelay strictly expected unnumbered exact markdown headers (`#+ Objective`) and hardcoded exact names, failing on numbered sections (`## 1. System Summary`, `## 2. What Works Right Now`, `## 5. Commands to Resume Work`).
 4. **Preserved Artifacts**: Saved full run in `dogfood/03_cross_repo_dogfood.json` and report in `dogfood/03_cross_repo_dogfood.md`.
 
+---
+
+## 7. Diversity-Preserving Convergence & Calibration Fix
+
+- **Defect Discovered During Dogfooding**:
+  1. `ConvergenceEngine` allowed the novelty wildcard selection to pick ideas from clusters that were already represented in the finalists list, defeating the purpose of cluster-based diversity.
+  2. Scoring prompts anchored models to uniform placeholder numbers (`0.7`, `0.8`), flattening evaluation contrast.
+- **Remediation**:
+  1. Updated `ConvergenceEngine.select_finalists` to strictly enforce distinct cluster representation when selecting both cluster champions and novelty wildcards.
+  2. Enforced calibration instructions in scoring prompts to discourage uniform ratings and require differentiation across the 0.0 - 1.0 range.
+  3. Added deterministic title-seeded hash scoring in `DeterministicProvider` to provide reproducible, distinct multi-dimensional scores across concepts.
+  4. Added test coverage in `tests/test_convergence.py`.
+

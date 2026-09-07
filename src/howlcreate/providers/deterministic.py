@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 from howlcreate.providers.base import BaseProvider, ProviderResponse
 
 
@@ -117,16 +118,31 @@ class DeterministicProvider(BaseProvider):
                 ],
             }
         elif "concept evaluator" in lower_prompt or "evaluate across dimensions" in lower_prompt:
+            title_match = re.search(r"Title:\s*([^\n]+)", prompt)
+            title_seed = title_match.group(1).strip() if title_match else has_hash
+
+            def _hash_score(dim: str, base: float = 0.50, spread: float = 0.40) -> Tuple[float, float]:
+                h = int(hashlib.sha256(f"{title_seed}:{dim}".encode("utf-8")).hexdigest()[:6], 16)
+                s = round(base + ((h % 100) / 100.0) * spread, 2)
+                u = round(0.05 + (((h >> 8) % 25) / 100.0), 2)
+                return s, u
+
+            nov_s, nov_u = _hash_score("novelty", 0.45, 0.50)
+            fea_s, fea_u = _hash_score("feasibility", 0.40, 0.50)
+            use_s, use_u = _hash_score("usefulness", 0.50, 0.45)
+            sim_s, sim_u = _hash_score("simplicity", 0.35, 0.50)
+            fit_s, fit_u = _hash_score("strategic_fit", 0.55, 0.40)
+
             content_dict = {
                 "scores": {
-                    "novelty": {"score": 0.85, "rationale": "Radically rejects conventional marketplace structures.", "uncertainty": 0.15},
-                    "feasibility": {"score": 0.78, "rationale": "Can be implemented using existing cryptographic and test primitives.", "uncertainty": 0.20},
-                    "usefulness": {"score": 0.90, "rationale": "Solves real sovereignty and economic coordination frictions.", "uncertainty": 0.10},
-                    "simplicity": {"score": 0.72, "rationale": "Clear core architecture with manageable edge cases.", "uncertainty": 0.25},
-                    "strategic_fit": {"score": 0.95, "rationale": "Directly empowers the Howl ecosystem boundary.", "uncertainty": 0.05},
+                    "novelty": {"score": nov_s, "rationale": f"Novelty evaluation for {title_seed}.", "uncertainty": nov_u},
+                    "feasibility": {"score": fea_s, "rationale": "Feasibility assessment based on technical primitives.", "uncertainty": fea_u},
+                    "usefulness": {"score": use_s, "rationale": "Targeted value for stated engineering constraints.", "uncertainty": use_u},
+                    "simplicity": {"score": sim_s, "rationale": "Mechanistic complexity analysis.", "uncertainty": sim_u},
+                    "strategic_fit": {"score": fit_s, "rationale": "Alignment with Howl ecosystem decentralization goals.", "uncertainty": fit_u},
                 },
-                "strengths": ["Autonomous verification", "Sovereign local-first execution"],
-                "weaknesses": ["Requires shift in mental model"],
+                "strengths": [f"Grounded mechanism for {title_seed}", "Sovereign local-first execution"],
+                "weaknesses": ["Requires operational validation under edge cases"],
                 "critical_risks": ["Adoption friction if CLI is too complex"],
             }
         elif "synthesis operator" in lower_prompt or "synthesis protocol" in lower_prompt:

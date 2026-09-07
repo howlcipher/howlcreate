@@ -16,6 +16,7 @@ def test_convergence_diverse_selection(deterministic_provider):
 
     assert len(finalists) == 2
     finalist_ids = {f.id for f in finalists}
+    assert "c2-1" in finalist_ids
 
     # Verify decision rationale exists for all ideas
     assert len(decisions) == 3
