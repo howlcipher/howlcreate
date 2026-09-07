@@ -40,7 +40,7 @@ HowlCreate is the computational creativity and open-ended problem-solving layer 
 
 ## 3. What Is in Progress / Known Limitations
 
-- **Dogfood Runs**: Dogfood Target 1 (remote work) is running/being analyzed. Dogfood Target 2 (self-architecture challenge) is next.
+- **Dogfood Runs**: Dogfood Target 1 (`run-64f4d1d9`, 29 concepts) completed and preserved under `dogfood/`. Dogfood Target 2 (self-architecture challenge) is next.
 - **Model Latency**: Local 7B model generation across 10 distinct phases takes ~3-4 minutes on Ollama. For quick checks, use `--provider deterministic`.
 - **Vector Embeddings**: Near-duplicate clustering currently uses fast unigram Jaccard + Cosine token matching. A future milestone will add optional local embedding support.
 

@@ -35,7 +35,7 @@ This roadmap tracks the development milestones and feature trajectories for **Ho
 ---
 
 ## Phase 2: Dogfooding & Empirical Refinement (Active 🔄)
-- [ ] Dogfood Target 1: Remote-work economic opportunities in the Howl ecosystem.
+- [x] Dogfood Target 1: Remote-work economic opportunities in the Howl ecosystem (`run-64f4d1d9`).
 - [ ] Dogfood Target 2: Self-architectural challenge for HowlCreate.
 - [ ] Incorporate dogfood critique into operator prompt engineering and schema robustness.
 - [ ] Benchmark signal evaluation across 12 diverse domain problems.
