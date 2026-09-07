@@ -137,3 +137,19 @@ A strict architectural boundary was established:
   3. Added deterministic title-seeded hash scoring in `DeterministicProvider` to provide reproducible, distinct multi-dimensional scores across concepts.
   4. Added test coverage in `tests/test_convergence.py`.
 
+---
+
+## 8. Dogfood Target 4 Analysis (HowlRelay Diff & Blocker Heuristics)
+
+- **Input Question**: *"How can HowlRelay provide deep, high-signal git diff summarization and blocker staleness heuristics for asynchronous agent handoffs, while strictly measuring the work system and never surveilling the worker?"*
+- **Execution Run ID**: `run-ddef596c` (Ollama provider with `qwen2.5-coder:7b-instruct`)
+- **Total Concepts Explored**: 27 across 10 divergent phases
+- **Preserved Artifacts**: `dogfood/04_howlrelay_diff_and_blocker_heuristics.json` and `dogfood/04_howlrelay_diff_and_blocker_heuristics.md`.
+- **Top Emergent Concepts for HowlRelay**:
+  1. `idea-bfe878`: **Deep Git Diff Summarization with Stigmergic State Log** (leveraging repository commits and files as the stigmergic coordination medium for async agents without centralized surveillance).
+  2. `idea-1ab32a`: **Blocker Staleness Heuristics via Time-Varying Reward Functions** (evaluating blocker staleness based on commit-age decay and work-system impact rather than developer activity).
+  3. `idea-669723`: **Offline Code Review Swarm** (local, rule-based static analysis of diffs, hunk symbols, and architectural test parity).
+- **Key Learnings & Bug Fixes**:
+  1. **Prompt Schema Anchoring**: The 7B model copied literal float numbers (`0.85`, `0.65`, `0.90`, `0.45`, `0.75`) directly from the JSON example schema into every evaluation. Fixed by replacing literal numbers with generic placeholders and strict warning.
+  2. **CLI Output Format Inference**: Running `howlcreate explore ... --output foo.json` wrote markdown by default unless `--format json` was explicitly passed. Added auto-detection so `--output *.json` automatically formats as JSON.
+

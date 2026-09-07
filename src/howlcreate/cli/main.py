@@ -50,7 +50,14 @@ def cmd_explore(args: argparse.Namespace) -> int:
 
     record = pipeline.execute(args.problem, provider=provider)
 
-    if args.format == "json":
+    format_type = args.format
+    if not format_type:
+        if args.output and args.output.endswith(".json"):
+            format_type = "json"
+        else:
+            format_type = "markdown"
+
+    if format_type == "json":
         output_text = json.dumps(record.to_dict(), indent=2)
     else:
         output_text = format_markdown_report(record)
@@ -200,7 +207,7 @@ def build_parser() -> argparse.ArgumentParser:
     explore_parser.add_argument("--model", type=str, default=None, help="Model identifier")
     explore_parser.add_argument("--top-n", type=int, default=3, help="Number of diverse finalists to converge to")
     explore_parser.add_argument("--output", "-o", type=str, help="Save report to file")
-    explore_parser.add_argument("--format", choices=["markdown", "json"], default="markdown", help="Output format")
+    explore_parser.add_argument("--format", choices=["markdown", "json"], default=None, help="Output format (defaults to json if --output ends with .json, otherwise markdown)")
     explore_parser.add_argument("--quiet", "-q", action="store_true", help="Suppress progress output")
     explore_parser.set_defaults(func=cmd_explore)
 

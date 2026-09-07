@@ -66,20 +66,21 @@ class ConvergenceEngine:
             f"4. simplicity: Is the mechanism elegant and minimal, or overcomplicated?\n"
             f"5. strategic_fit: Does this align with the sovereign, verifiable goals of the Howl ecosystem?\n\n"
             f"CALIBRATION INSTRUCTIONS (Differentiate strictly across the 0.0 - 1.0 range):\n"
-            f"- DO NOT assign uniform scores (e.g. all 0.7 or 0.8). Evaluate each dimension independently.\n"
+            f"- DO NOT assign uniform scores. Evaluate each dimension independently.\n"
             f"- Ideas with high complexity, ungrounded claims, or sybil risks MUST score low on feasibility/simplicity (0.2-0.5).\n"
             f"- Obvious, generic, or conventional proposals MUST score low on novelty (0.1-0.4).\n"
             f"- Off-target or irrelevant concepts MUST score low on usefulness/strategic_fit (0.1-0.4).\n"
-            f"- Reserve high scores (>= 0.85) strictly for genuinely exceptional, defensible concepts.\n\n"
+            f"- Reserve high scores (>= 0.85) strictly for genuinely exceptional, defensible concepts.\n"
+            f"- Compute genuine, differentiated floating-point values for each dimension based on this specific concept.\n\n"
             f"For each score, provide uncertainty (0.0 = high confidence, 1.0 = highly uncertain estimate).\n\n"
-            f"Return valid JSON with differentiated numbers:\n"
+            f"Return valid JSON (replace placeholder types with your evaluated float numbers):\n"
             f"{{\n"
             f'  "scores": {{\n'
-            f'    "novelty": {{"score": 0.85, "rationale": "...", "uncertainty": 0.15}},\n'
-            f'    "feasibility": {{"score": 0.65, "rationale": "...", "uncertainty": 0.25}},\n'
-            f'    "usefulness": {{"score": 0.90, "rationale": "...", "uncertainty": 0.10}},\n'
-            f'    "simplicity": {{"score": 0.45, "rationale": "...", "uncertainty": 0.30}},\n'
-            f'    "strategic_fit": {{"score": 0.75, "rationale": "...", "uncertainty": 0.20}}\n'
+            f'    "novelty": {{"score": 0.0, "rationale": "...", "uncertainty": 0.0}},\n'
+            f'    "feasibility": {{"score": 0.0, "rationale": "...", "uncertainty": 0.0}},\n'
+            f'    "usefulness": {{"score": 0.0, "rationale": "...", "uncertainty": 0.0}},\n'
+            f'    "simplicity": {{"score": 0.0, "rationale": "...", "uncertainty": 0.0}},\n'
+            f'    "strategic_fit": {{"score": 0.0, "rationale": "...", "uncertainty": 0.0}}\n'
             f'  }},\n'
             f'  "strengths": ["Strength 1", "Strength 2"],\n'
             f'  "weaknesses": ["Weakness 1"],\n'
