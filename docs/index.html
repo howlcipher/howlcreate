@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="HowlCreate is the computational creativity, ideation, and open-ended problem-solving layer of the Howl ecosystem, turning ambiguous challenges into lineage-tracked concepts.">
+    <link rel="canonical" href="https://howlcipher.github.io/howlcreate/">
+
+    <!-- Open Graph Metadata -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="HowlCreate">
+    <meta property="og:title" content="HowlCreate | Computational Creativity &amp; Ideation Layer">
+    <meta property="og:description" content="What could we do? Multi-operator creative search, assumption challenging, lateral exploration, and concept lineage before execution planning.">
+    <meta property="og:url" content="https://howlcipher.github.io/howlcreate/">
+    <meta property="og:image" content="https://howlcipher.github.io/howlcreate/social-preview.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="HowlCreate computational creativity and concept lineage preview card">
+
+    <!-- Twitter Card Metadata -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="HowlCreate | Computational Creativity &amp; Ideation Layer">
+    <meta name="twitter:description" content="What could we do? Multi-operator creative search, assumption challenging, lateral exploration, and concept lineage before execution planning.">
+    <meta name="twitter:image" content="https://howlcipher.github.io/howlcreate/social-preview.png">
+    <meta name="twitter:image:alt" content="HowlCreate computational creativity and concept lineage preview card">
+
+    <title>HowlCreate | Computational Creativity &amp; Ideation Layer</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" type="image/png" href="favicon.png">
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <!-- Ecosystem Slide-out Drawer Overlay -->
+    <div id="eco-drawer-overlay" class="eco-drawer-overlay" aria-hidden="true"></div>
+
+    <!-- Ecosystem Slide-out Drawer Panel -->
+    <aside id="eco-drawer" class="eco-drawer" aria-label="Howl Ecosystem Directory" aria-hidden="true">
+        <div class="drawer-header">
+            <div class="drawer-title">HOWL // ECOSYSTEM DIRECTORY</div>
+            <button id="eco-drawer-close" class="btn-drawer-close" type="button" aria-label="Close ecosystem directory">[✕ CLOSE]</button>
+        </div>
+        <div class="drawer-body">
+            <a href="https://howlcipher.github.io/howl/" class="drawer-node-card">
+                <div class="node-card-top">
+                    <span class="node-card-name">HOWL // HUB</span>
+                    <span class="node-card-role">[PORTAL]</span>
+                </div>
+                <div class="node-card-desc">Central ecosystem portal, architectural blueprint, and cross-project governance map.</div>
+            </a>
+
+            <a href="https://howlcipher.github.io/howlcreate/" class="drawer-node-card active-hub">
+                <div class="node-card-top">
+                    <span class="node-card-name">HOWLCREATE</span>
+                    <span class="node-card-role" style="color: var(--color-amber);">[CREATIVE SEARCH]</span>
+                </div>
+                <div class="node-card-desc">Computational creativity, open-ended problem exploration, reframing, and concept lineage.</div>
+            </a>
+
+            <a href="https://howlcipher.github.io/howlframe/" class="drawer-node-card">
+                <div class="node-card-top">
+                    <span class="node-card-name">HOWLFRAME</span>
+                    <span class="node-card-role" style="color: var(--color-magenta);">[VM &amp; COMPILER]</span>
+                </div>
+                <div class="node-card-desc">AI-native reasoning language, typed intermediate representation, and sandboxed bytecode VM.</div>
+            </a>
+
+            <a href="https://howlcipher.github.io/howlplane/" class="drawer-node-card">
+                <div class="node-card-top">
+                    <span class="node-card-name">HOWLPLANE</span>
+                    <span class="node-card-role" style="color: var(--color-blue);">[CONTROL PLANE]</span>
+                </div>
+                <div class="node-card-desc">Engineering control plane with deterministic routing, adversarial falsification, and human gates.</div>
+            </a>
+
+            <a href="https://howlcipher.github.io/howlchangeops/" class="drawer-node-card">
+                <div class="node-card-top">
+                    <span class="node-card-name">HOWLCHANGEOPS</span>
+                    <span class="node-card-role" style="color: var(--color-red);">[AUTHORITY GATE]</span>
+                </div>
+                <div class="node-card-desc">Governed release controller enforcing cryptographic human approvals and bounded Git mutations.</div>
+            </a>
+
+            <a href="https://howlcipher.github.io/howlrelay/" class="drawer-node-card">
+                <div class="node-card-top">
+                    <span class="node-card-name">HOWLRELAY</span>
+                    <span class="node-card-role" style="color: var(--color-cyan);">[CONTINUITY]</span>
+                </div>
+                <div class="node-card-desc">Persistent asynchronous work coordination, durable journals, and resumable execution handoffs.</div>
+            </a>
+
+            <a href="https://howlcipher.github.io/howlnotes/" class="drawer-node-card">
+                <div class="node-card-top">
+                    <span class="node-card-name">HOWLNOTES</span>
+                    <span class="node-card-role" style="color: var(--color-cyan);">[KNOWLEDGE NOTEBOOK]</span>
+                </div>
+                <div class="node-card-desc">Engineering knowledge notebook &amp; full-stack dogfood consumer proving native persistent storage.</div>
+            </a>
+
+            <a href="https://howlcipher.github.io/howlboard/" class="drawer-node-card">
+                <div class="node-card-top">
+                    <span class="node-card-name">HOWLBOARD</span>
+                    <span class="node-card-role" style="color: var(--color-amber);">[EVALUATION SURFACE]</span>
+                </div>
+                <div class="node-card-desc">Observation console and full-stack deterministic task state machine application.</div>
+            </a>
+
+            <a href="https://howlcipher.github.io/howlwriter/" class="drawer-node-card">
+                <div class="node-card-top">
+                    <span class="node-card-name">HOWLWRITER</span>
+                    <span class="node-card-role" style="color: var(--color-magenta);">[WRITING CONTROL]</span>
+                </div>
+                <div class="node-card-desc">Writing control system for voice preservation, deterministic style linting, humanization, and review.</div>
+            </a>
+        </div>
+        <div class="drawer-footer">
+            <span>● 8 PRODUCTION &amp; CONTINUITY NODES</span>
+            <span>AUTH // HOWL 2026</span>
+        </div>
+    </aside>
+
+    <div class="layout-container">
+        <!-- Site Header -->
+        <header class="site-header">
+            <div class="header-top">
+                <div class="header-brand">
+                    <a href="https://howlcipher.github.io/howlcreate/" class="brand-sig">HOWL <span>//</span> CREATE</a>
+                    <span class="subsystem-tag">SYS_ID: HCRT-IDEATE-07</span>
+                </div>
+                <div class="header-actions">
+                    <button id="eco-menu-toggle" class="btn-eco-toggle" type="button" aria-expanded="false" aria-controls="eco-drawer" aria-label="Toggle Howl Ecosystem Directory">
+                        <span aria-hidden="true">☰</span> [ECOSYSTEM]
+                    </button>
+                    <button id="theme-toggle" class="btn-theme-toggle" type="button" aria-pressed="false">
+                        <span aria-hidden="true">☾</span> [DARK_MODE]
+                    </button>
+                    <a href="https://github.com/howlcipher/howlcreate" class="btn-tech btn-tech-primary" target="_blank" rel="noreferrer">
+                        [ GITHUB REPO ]
+                    </a>
+                </div>
+            </div>
+
+            <!-- In-Page Section Navigation -->
+            <nav class="section-nav" aria-label="Page sections">
+                <span class="section-nav-label">READ_PATH:</span>
+                <a href="#overview">01_Overview</a>
+                <a href="#why-create">02_WhyItExists</a>
+                <a href="#boundary">03_HowlPlaneBoundary</a>
+                <a href="#operators">04_CreativeOperators</a>
+                <a href="#pipeline">05_ExplorationWorkflow</a>
+                <a href="#status-cli">06_StatusAndCLI</a>
+            </nav>
+        </header>
+
+        <!-- Main Content Surface -->
+        <main id="main-content">
+            <!-- Hero Panel -->
+            <section class="hero-panel" aria-labelledby="main-title">
+                <div class="hero-banner">
+                    <span>SPEC_VER // 2026.1 (RETRO-FUTURIST INDUSTRIAL SPEC)</span>
+                    <span>ARCHITECTURE: COMPUTATIONAL CREATIVITY &amp; CONCEPT EVOLUTION</span>
+                </div>
+                <div class="hero-body">
+                    <div class="hero-header-block">
+                        <p class="hero-kicker">// creative reasoning / open-ended exploration / concept lineage</p>
+                        <h1 id="main-title" class="hero-title">HowlCreate <span class="jp-sub">クリエイト // 2026</span></h1>
+                        <p class="hero-lead">
+                            HowlCreate helps turn imagination, ideas, ambiguity, and open-ended problems into rigorous concepts that can be explored, refined, challenged, and handed into the rest of the Howl ecosystem.
+                        </p>
+                    </div>
+
+                    <div class="axiom-card" role="region" aria-label="Governing Principle" style="border-left-color: var(--color-amber);">
+                        <strong>CORE QUESTION // WHAT COULD WE DO?</strong> HowlCreate explores possibilities before another system decides how to execute them. It performs disciplined divergent-then-convergent search: surfacing hidden assumptions, inverting constraints, analogizing across domains, and evaluating candidate concepts.
+                    </div>
+
+                    <div class="hero-actions">
+                        <a href="#pipeline" class="btn-tech btn-tech-primary">
+                            [ EXPLORE PIPELINE ]
+                        </a>
+                        <a href="#boundary" class="btn-tech">
+                            [ HOWLPLANE BOUNDARY ]
+                        </a>
+                        <a href="https://github.com/howlcipher/howlcreate" class="btn-tech" target="_blank" rel="noreferrer">
+                            [ VIEW ON GITHUB ]
+                        </a>
+                    </div>
+
+                    <!-- Hero Interoperability Diagram -->
+                    <div class="hero-diagram-wrap" aria-label="HowlCreate Exploration Flow">
+                        <div class="diagram-header">
+                            <span>PIPELINE // DIVERGENT-CONVERGENT SEARCH TO HANDOFF</span>
+                            <span>STATUS: EARLY-STAGE CORE ACTIVE</span>
+                        </div>
+                        <div class="code-container" style="border: none; margin: 0;">
+                            <pre><code>┌─────────────┐       ┌─────────────┐       ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
+│    IDEA     │──────►│   EXPLORE   │──────►│   REFRAME   │──────►│  GENERATE   │──────►│  EVALUATE   │
+│ (Raw Seed)  │       │ &amp; ASSUME    │       │ (Lenses)    │       │  (Mutate)   │       │ &amp; CRITIQUE  │
+└─────────────┘       └─────────────┘       └─────────────┘       └─────────────┘       └──────┬──────┘
+                                                                                               │
+                                            ┌──────────────────────────────────────────────────┘
+                                            ▼
+                                    ┌─────────────┐       ┌─────────────────────────────┐
+                                    │  HAND OFF   │──────►│ HOWLPLANE / HOWLFRAME       │
+                                    │ (Finalists) │       │ (Planning &amp; Verification)   │
+                                    └─────────────┘       └─────────────────────────────┘</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 01 Overview -->
+            <section id="overview" class="tech-panel">
+                <div class="tech-header">
+                    <h2><span class="sec-id">SECTION // 01</span> Concise Explanation &amp; Epistemic Grounding</h2>
+                    <span class="subsystem-tag">HCRT-MOD-OVERVIEW</span>
+                </div>
+                <div class="tech-body">
+                    <p>
+                        Most AI-assisted development tools jump immediately to implementation: writing code, formulating plans, or generating diffs. But when facing ambiguous engineering challenges, new product definitions, or architectural trade-offs, the hardest task is not executing the first plausible idea — it is discovering the best idea among hidden alternatives.
+                    </p>
+                    <p>
+                        <strong>HowlCreate</strong> is the Howl ecosystem's dedicated computational creativity layer. Rather than treating brainstorming as a single unstructured LLM prompt, HowlCreate runs a disciplined, multi-operator search across possibilities. It maps assumptions, inverts constraints, generates distant analogies, branches independently to prevent premature convergence, applies adversarial critique, and produces a defensible directed acyclic graph (DAG) of concept lineage.
+                    </p>
+                </div>
+            </section>
+
+            <!-- 02 Why It Exists -->
+            <section id="why-create" class="tech-panel">
+                <div class="tech-header">
+                    <h2><span class="sec-id">SECTION // 02</span> Why HowlCreate Exists</h2>
+                    <span class="subsystem-tag">HCRT-MOD-PURPOSE</span>
+                </div>
+                <div class="tech-body">
+                    <div class="grid-2col">
+                        <div class="dir-card" style="border-top: 3px solid var(--color-amber);">
+                            <div class="dir-card-header">
+                                <span class="dir-card-title">01 // Divergence Before Convergence</span>
+                                <span class="chip chip-amber">AVOID LOCAL MAXIMA</span>
+                            </div>
+                            <p class="dir-card-desc">
+                                Premature evaluation suffocates lateral exploration. When models evaluate ideas in the same turn they generate them, they invariably choose conventional, cliché paths. HowlCreate enforces distinct exploration phases before any ranking occurs.
+                            </p>
+                        </div>
+                        <div class="dir-card" style="border-top: 3px solid var(--color-magenta);">
+                            <div class="dir-card-header">
+                                <span class="dir-card-title">02 // Epistemic Truthfulness</span>
+                                <span class="chip chip-magenta">NO HALLUCINATED FACTS</span>
+                            </div>
+                            <p class="dir-card-desc">
+                                Creative tools often hallucinate non-existent APIs or fabricate evidence. In HowlCreate, all generated artifacts are strictly partitioned by epistemic status: <code>FACT</code>, <code>ASSUMPTION</code>, <code>SPECULATION</code>, <code>HYPOTHESIS</code>, or <code>IMAGINED_POSSIBILITY</code>.
+                            </p>
+                        </div>
+                        <div class="dir-card" style="border-top: 3px solid var(--color-blue);">
+                            <div class="dir-card-header">
+                                <span class="dir-card-title">03 // Full Concept Lineage (DAG)</span>
+                                <span class="chip chip-blue">TRACEABLE REASONING</span>
+                            </div>
+                            <p class="dir-card-desc">
+                                Every finalist concept retains its parentage, the specific creative operator that spawned it, the assumptions it mutated, and the adversarial critiques it survived. Teams know exactly <em>why</em> an idea was formed.
+                            </p>
+                        </div>
+                        <div class="dir-card" style="border-top: 3px solid var(--color-cyan);">
+                            <div class="dir-card-header">
+                                <span class="dir-card-title">04 // Offline &amp; Provider Agnostic</span>
+                                <span class="chip chip-cyan">LOCAL-FIRST</span>
+                            </div>
+                            <p class="dir-card-desc">
+                                Built to operate offline with deterministic mock providers for testing and CI, local Ollama endpoints for private exploration, or external API endpoints when configured. Zero telemetry leaves your system.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 03 Relationship to HowlPlane -->
+            <section id="boundary" class="tech-panel">
+                <div class="tech-header">
+                    <h2><span class="sec-id">SECTION // 03</span> Architectural Distinction: HowlCreate vs HowlPlane</h2>
+                    <span class="subsystem-tag">HCRT-MOD-BOUNDARY</span>
+                </div>
+                <div class="tech-body">
+                    <p>
+                        A clear boundary separates creative exploration from execution orchestration:
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Dimension</th>
+                                    <th>HowlCreate</th>
+                                    <th>HowlPlane</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Core Question</strong></td>
+                                    <td><em>"What could we do?"</em></td>
+                                    <td><em>"How do we get this done?"</em></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Primary Actions</strong></td>
+                                    <td>Imagine, ideate, explore, brainstorm, reframe, synthesize, generate options, challenge assumptions.</td>
+                                    <td>Reason about execution, plan work, decompose tasks, evaluate approaches, orchestrate agents, verify output.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Artifact Emitted</strong></td>
+                                    <td>Lineage-tracked candidate concepts, assumption registers, risk profiles, evidence needs.</td>
+                                    <td>Execution DAGs, agent task assignments, verified git commits, evidence ledgers.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Epistemic Role</strong></td>
+                                    <td>Tags speculation and hypotheses; surfaces uncertainty.</td>
+                                    <td>Orchestrates independent falsification reviewers and deterministic gates.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Authority Boundary</strong></td>
+                                    <td>Zero mutation authority over repositories, codebases, or production environments.</td>
+                                    <td>Coordinates with HowlChangeOps to enforce cryptographic human sign-off before mutations.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 04 Creative Operators -->
+            <section id="operators" class="tech-panel">
+                <div class="tech-header">
+                    <h2><span class="sec-id">SECTION // 04</span> Implemented Creative Operators</h2>
+                    <span class="subsystem-tag">HCRT-MOD-OPERATORS</span>
+                </div>
+                <div class="tech-body">
+                    <p>
+                        HowlCreate's engine executes modular operators to systematically push past cliché solutions:
+                    </p>
+                    <div class="grid-2col">
+                        <div>
+                            <h3>01 // Assumption Extraction &amp; Inversion</h3>
+                            <p>Surfaces implicit premises often taken for granted in the problem framing, then deliberately inverts them to discover orthogonal solutions.</p>
+                        </div>
+                        <div>
+                            <h3>02 // Multi-Perspective Reframing</h3>
+                            <p>Re-examines challenges through diverse conceptual lenses: economic, operational, security, ergonomics, ecosystem gravity, and resilience.</p>
+                        </div>
+                        <div>
+                            <h3>03 // Independent Branching</h3>
+                            <p>Generates multiple distant seeds in parallel without allowing early seeds to contaminate the search context of subsequent branches.</p>
+                        </div>
+                        <div>
+                            <h3>04 // Constraint Mutation</h3>
+                            <p>Tightens, removes, or inverts constraints (e.g. zero network connectivity, infinite latency, zero human intervention) to uncover architectural invariants.</p>
+                        </div>
+                        <div>
+                            <h3>05 // Cross-Domain Analogies</h3>
+                            <p>Draws structural parallels from biology, industrial manufacturing, distributed consensus, physical supply chains, and urban planning.</p>
+                        </div>
+                        <div>
+                            <h3>06 // Adversarial Critique &amp; Brittleness</h3>
+                            <p>Constructs dedicated red-team evaluations targeting each concept's failure modes, operational friction, and unstated risks.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 05 Exploration Workflow -->
+            <section id="pipeline" class="tech-panel">
+                <div class="tech-header">
+                    <h2><span class="sec-id">SECTION // 05</span> The Divergent-Convergent Pipeline</h2>
+                    <span class="subsystem-tag">HCRT-MOD-PIPELINE</span>
+                </div>
+                <div class="tech-body">
+                    <div class="code-container">
+                        <div class="code-header">
+                            <span class="code-title">[WORKFLOW // END_TO_END_EXPLORATION]</span>
+                            <span class="subsystem-tag">CREATIVE_PIPELINE</span>
+                        </div>
+                        <pre><code>1. PROBLEM SEED
+   │  "How do we safely delegate repository maintenance to autonomous agents?"
+   ▼
+2. ASSUMPTION EXTRACTION &amp; INVERSION
+   ├─ Assumption: Agents need push access to git remotes.
+   └─ Inversion: Agents generate cryptographically isolated patches; only human sign-off applies them.
+   ▼
+3. MULTI-PERSPECTIVE REFRAMING
+   ├─ Lens (Security): Every diff is untrusted input until proven safe.
+   └─ Lens (Ergonomics): Reviewers need human-readable rationale, not raw token logs.
+   ▼
+4. DIVERGENT BRANCHING &amp; MUTATION
+   ├─ Branch A: Out-of-band ephemeral pull-request staging.
+   ├─ Branch B: Proof-carrying change envelopes (HowlChangeOps archetype).
+   └─ Branch C: Resumable baton journals (HowlRelay archetype).
+   ▼
+5. ADVERSARIAL CRITIQUE &amp; MULTI-DIMENSIONAL SCORING
+   ├─ Probes: TOCTOU drift, latency overhead, token consumption, auditability.
+   └─ Result: Discard fragile branches; elevate robust candidates to finalists.
+   ▼
+6. HANDOFF TO ECOSYSTEM
+   ├─ HowlFrame receives: Explicit claims, assumptions, and required evidence.
+   └─ HowlPlane receives: Selected finalists to formulate execution tasks and worker routing.</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 06 Status & CLI -->
+            <section id="status-cli" class="tech-panel">
+                <div class="tech-header">
+                    <h2><span class="sec-id">SECTION // 06</span> Current Status, Installation &amp; CLI</h2>
+                    <span class="subsystem-tag">HCRT-MOD-CLI</span>
+                </div>
+                <div class="tech-body">
+                    <div class="axiom-card" style="border-left-color: var(--color-amber);">
+                        <strong>HONEST MATURITY STATUS // EARLY STAGE (v0.1.0 Foundation):</strong><br>
+                        HowlCreate is in active initial development. Core data models, pipeline orchestration, modular operators, lineage graph serialization, and deterministic/mock providers are implemented. Complex semantic clustering and deep multi-provider model routing remain active roadmap areas.
+                    </div>
+
+                    <div class="code-container">
+                        <div class="code-header">
+                            <span class="code-title">[BASH // HOWLCREATE_CLI_USAGE]</span>
+                            <button class="btn-copy" type="button">[COPY]</button>
+                        </div>
+                        <pre><code># Install HowlCreate in development mode:
+git clone https://github.com/howlcipher/howlcreate.git
+cd howlcreate
+pip install -e ".[dev]"
+
+# Run full creative exploration on an ambiguous prompt:
+howlcreate explore "How can distributed agents coordinate without synchronous meetings?"
+
+# Extract and invert hidden assumptions:
+howlcreate assumptions "How to design an immutable continuous delivery pipeline"
+
+# Reframe a problem through diverse analytical lenses:
+howlcreate reframe "Test suites take 45 minutes to execute on CI"
+
+# Inspect creative search runs and concept lineage:
+howlcreate runs list
+howlcreate runs show &lt;run-id&gt; --format markdown
+
+# Run automated tests:
+pytest -v</code></pre>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Site Footer -->
+        <footer class="site-footer">
+            <div class="footer-telemetry">
+                <div class="status-indicator">
+                    <span class="status-dot" aria-hidden="true" style="background: var(--color-amber);"></span>
+                    <span>SYS_STATUS: ACTIVE // HOWLCREATE-IDEATION-NODE</span>
+                </div>
+                <div>AUTH // HOWL 2026</div>
+            </div>
+            <div class="footer-links">
+                <nav class="footer-nav" aria-label="Ecosystem Links">
+                    <a href="https://howlcipher.github.io/howl/">Howl Hub</a>
+                    <a href="https://howlcipher.github.io/howlcreate/">HowlCreate</a>
+                    <a href="https://howlcipher.github.io/howlframe/">HowlFrame</a>
+                    <a href="https://howlcipher.github.io/howlplane/">HowlPlane</a>
+                    <a href="https://howlcipher.github.io/howlchangeops/">HowlChangeOps</a>
+                    <a href="https://howlcipher.github.io/howlrelay/">HowlRelay</a>
+                    <a href="https://howlcipher.github.io/howlnotes/">HowlNotes</a>
+                    <a href="https://howlcipher.github.io/howlboard/">HowlBoard</a>
+                    <a href="https://howlcipher.github.io/howlwriter/">HowlWriter</a>
+                </nav>
+                <a href="#main-content">[ BACK TO TOP ]</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
