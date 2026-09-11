@@ -52,6 +52,7 @@ def test_develop_candidate_accepted():
     assert result["epistemic_status"] == "IMAGINED_POSSIBILITY"
     assert result["authority"]["executable"] is False
     assert result["authority"]["type"] == "ADVISORY"
+    assert result["execution_authority"] == "NONE"
 
     # Verify idea
     idea = result["idea"]

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from howlcreate.models.idea import (
     ConceptStatus,
@@ -160,6 +160,7 @@ def develop_candidate(
             "type": "ADVISORY",
             "executable": False,
         },
+        "execution_authority": "NONE",
         "idea": idea.to_dict(),
         "lineage": {
             "parent_id": candidate_id,
