@@ -191,6 +191,38 @@ def cmd_list(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_develop(args: argparse.Namespace) -> int:
+    """Ingest a candidate handoff and assessment, producing a deliberate development plan."""
+    from howlcreate.engine.candidate_ingestion import develop_candidate, IngestionError
+
+    cand_path = Path(args.candidate_file)
+    assess_path = Path(args.assessment)
+
+    if not cand_path.is_file():
+        print(f"Error: Candidate file '{cand_path}' not found", file=sys.stderr)
+        return 1
+    if not assess_path.is_file():
+        print(f"Error: Assessment file '{assess_path}' not found", file=sys.stderr)
+        return 1
+
+    cand_data = json.loads(cand_path.read_text(encoding="utf-8"))
+    assess_data = json.loads(assess_path.read_text(encoding="utf-8"))
+
+    try:
+        dev_res = develop_candidate(cand_data, assess_data)
+    except IngestionError as e:
+        print(f"Ingestion rejected: {e}", file=sys.stderr)
+        return 2
+
+    out_text = json.dumps(dev_res, indent=2)
+    if args.output:
+        Path(args.output).write_text(out_text, encoding="utf-8")
+        print(f"[Saved] Development plan written to: {args.output}")
+    else:
+        print(out_text)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="howlcreate",
@@ -247,6 +279,13 @@ def build_parser() -> argparse.ArgumentParser:
     # list
     list_parser = subparsers.add_parser("list", help="List all stored runs")
     list_parser.set_defaults(func=cmd_list)
+
+    # develop
+    develop_parser = subparsers.add_parser("develop", help="Ingest a HowlFrame-promoted candidate for deliberate sandbox development")
+    develop_parser.add_argument("candidate_file", type=str, help="Path to howl.candidate/v1 JSON file")
+    develop_parser.add_argument("--assessment", "-a", type=str, required=True, help="Path to howl.assessment/v1 JSON file")
+    develop_parser.add_argument("--output", "-o", type=str, help="Output destination file")
+    develop_parser.set_defaults(func=cmd_develop)
 
     return parser
 
