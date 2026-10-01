@@ -58,11 +58,17 @@ def _print_step(phase: str, payload: dict) -> None:
 
 def cmd_explore(args: argparse.Namespace) -> int:
     """Execute the full divergent & convergent creative exploration pipeline."""
+    hard_constraints = (
+        getattr(args, "hard_constraints", None)
+        or getattr(args, "hard_constraint", None)
+        or []
+    )
     config = PipelineConfig(
         top_n=args.top_n,
         max_calls=args.max_calls,
         ecosystem_fit_weight=args.ecosystem_fit_weight,
         provider_name=args.provider,
+        hard_constraints=hard_constraints,
         on_step_callback=_print_step if not args.quiet else None,
     )
     pipeline = CreativePipeline(config=config)
@@ -92,7 +98,7 @@ def cmd_explore(args: argparse.Namespace) -> int:
     else:
         print(output_text)
 
-    return 1 if record.metadata.get("status") == "PARTIAL" else 0
+    return 0 if record.metadata.get("status") == "COMPLETE" else 1
 
 
 def cmd_assumptions(args: argparse.Namespace) -> int:
@@ -292,6 +298,13 @@ def build_parser() -> argparse.ArgumentParser:
     explore_parser.add_argument("--model", type=str, default=None, help="Model identifier")
     explore_parser.add_argument(
         "--top-n", type=int, default=3, help="Number of diverse finalists to converge to"
+    )
+    explore_parser.add_argument(
+        "--hard-constraint",
+        action="append",
+        default=[],
+        dest="hard_constraints",
+        help="Mandatory requirement a candidate must satisfy to become a finalist",
     )
     explore_parser.add_argument("--output", "-o", type=str, help="Save report to file")
     explore_parser.add_argument(
