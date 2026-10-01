@@ -25,26 +25,28 @@ class SimplificationOperator(BaseOperator):
     ) -> OperatorResult:
         prompt = (
             f"You are the Simplification & Dissolution Operator in HowlCreate.\n\n"
-            f"Problem: \"{problem}\"\n\n"
+            f'Problem: "{problem}"\n\n'
             f"Core Question:\n"
             f"Instead of building complex machinery to solve this problem, how can the need for this problem to exist be eliminated entirely?\n"
             f"What structural, architectural, or incentive shift makes this whole issue irrelevant?\n\n"
             f"Return valid JSON:\n"
             f"{{\n"
             f'  "ideas": [\n'
-            f'    {{\n'
+            f"    {{\n"
             f'      "title": "Problem Dissolution Concept",\n'
             f'      "eliminated_need": "What burdensome requirement was removed",\n'
             f'      "description": "How the problem disappears",\n'
             f'      "core_mechanism": "Minimal mechanism replacing the problem space",\n'
             f'      "speculations": ["Speculative assumptions"],\n'
             f'      "evidence_needs": ["Empirical verification needed"]\n'
-            f'    }}\n'
-            f'  ]\n'
+            f"    }}\n"
+            f"  ]\n"
             f"}}\n"
         )
 
-        resp = provider.generate(prompt, json_mode=True, temperature=0.7)
+        resp = provider.generate_for(
+            self.operator_type.value, prompt, json_mode=True, temperature=0.7
+        )
         data = resp.extract_json() or {}
 
         ideas: List[Idea] = []
@@ -66,6 +68,12 @@ class SimplificationOperator(BaseOperator):
             )
             ideas.append(idea)
 
+        for generated in ideas:
+            generated.provenance.update(
+                producer_component="howlcreate",
+                execution=resp.metadata.get("execution"),
+                transformations=[self.operator_type.value],
+            )
         return OperatorResult(
             operator_type=OperatorType.SIMPLIFICATION,
             ideas=ideas,

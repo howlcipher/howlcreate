@@ -24,11 +24,15 @@ class SecondOrderOperator(BaseOperator):
         parameters: Optional[Dict[str, Any]] = None,
     ) -> OperatorResult:
         context_idea = context_ideas[0] if context_ideas else None
-        target_context = f"\nFocus Idea to extrapolate: '{context_idea.title}' - {context_idea.description}" if context_idea else ""
+        target_context = (
+            f"\nFocus Idea to extrapolate: '{context_idea.title}' - {context_idea.description}"
+            if context_idea
+            else ""
+        )
 
         prompt = (
             f"You are the Second-Order Exploration Operator in HowlCreate.\n\n"
-            f"Problem: \"{problem}\"{target_context}\n\n"
+            f'Problem: "{problem}"{target_context}\n\n'
             f"Thinking Protocol:\n"
             f"First-order thinking asks: What happens immediately when we solve this?\n"
             f"Second-order thinking asks: And then what? What feedback loops, behavioral adaptations, or emergent secondary equilibria occur when millions adopt this?\n\n"
@@ -38,19 +42,21 @@ class SecondOrderOperator(BaseOperator):
             f"Return valid JSON:\n"
             f"{{\n"
             f'  "ideas": [\n'
-            f'    {{\n'
+            f"    {{\n"
             f'      "title": "Second-Order Concept Title",\n'
             f'      "second_order_shift": "The systemic ripple effect anticipated",\n'
             f'      "description": "Full description of proactive concept",\n'
             f'      "core_mechanism": "Mechanism addressing the emergent equilibrium",\n'
             f'      "speculations": ["Speculative feedback loops"],\n'
             f'      "evidence_needs": ["Empirical indicators to monitor"]\n'
-            f'    }}\n'
-            f'  ]\n'
+            f"    }}\n"
+            f"  ]\n"
             f"}}\n"
         )
 
-        resp = provider.generate(prompt, json_mode=True, temperature=0.75)
+        resp = provider.generate_for(
+            self.operator_type.value, prompt, json_mode=True, temperature=0.75
+        )
         data = resp.extract_json() or {}
 
         ideas: List[Idea] = []
@@ -73,6 +79,12 @@ class SecondOrderOperator(BaseOperator):
             )
             ideas.append(idea)
 
+        for generated in ideas:
+            generated.provenance.update(
+                producer_component="howlcreate",
+                execution=resp.metadata.get("execution"),
+                transformations=[self.operator_type.value],
+            )
         return OperatorResult(
             operator_type=OperatorType.SECOND_ORDER_EXPLORATION,
             ideas=ideas,

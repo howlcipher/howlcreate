@@ -25,14 +25,14 @@ class SubstitutionOperator(BaseOperator):
     ) -> OperatorResult:
         prompt = (
             f"You are the Substitution Operator in HowlCreate.\n\n"
-            f"Problem: \"{problem}\"\n\n"
+            f'Problem: "{problem}"\n\n'
             f"Substitution Protocol:\n"
             f"Identify a standard component (e.g. human manager, centralized database, legal contract, salary, synchronous meeting).\n"
             f"Replace that component with a fundamentally different actor or medium (e.g. mathematical proof, automated escrow, stigmergic state log, local-first cache).\n\n"
             f"Return valid JSON:\n"
             f"{{\n"
             f'  "ideas": [\n'
-            f'    {{\n'
+            f"    {{\n"
             f'      "title": "Substituted Architecture Title",\n'
             f'      "conventional_element": "What standard element was removed",\n'
             f'      "substituted_replacement": "What unexpected medium replaces it",\n'
@@ -40,12 +40,14 @@ class SubstitutionOperator(BaseOperator):
             f'      "core_mechanism": "Working mechanism of substitution",\n'
             f'      "speculations": ["Speculative assumptions"],\n'
             f'      "evidence_needs": ["Empirical verification needed"]\n'
-            f'    }}\n'
-            f'  ]\n'
+            f"    }}\n"
+            f"  ]\n"
             f"}}\n"
         )
 
-        resp = provider.generate(prompt, json_mode=True, temperature=0.75)
+        resp = provider.generate_for(
+            self.operator_type.value, prompt, json_mode=True, temperature=0.75
+        )
         data = resp.extract_json() or {}
 
         ideas: List[Idea] = []
@@ -68,6 +70,12 @@ class SubstitutionOperator(BaseOperator):
             )
             ideas.append(idea)
 
+        for generated in ideas:
+            generated.provenance.update(
+                producer_component="howlcreate",
+                execution=resp.metadata.get("execution"),
+                transformations=[self.operator_type.value],
+            )
         return OperatorResult(
             operator_type=OperatorType.SUBSTITUTION,
             ideas=ideas,

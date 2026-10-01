@@ -70,7 +70,7 @@ OUTPUT CONCEPTS (Lineage-Tracked Finalists)
 1. **Divergence Before Convergence**: Never rank ideas immediately after generation. Premature evaluation suffocates exploration. The search budget is first spent discovering distant branches.
 2. **Epistemic Truthfulness**: Facts, assumptions, speculation, hypotheses, analogies, and predictions are explicitly labeled. Speculation is never masqueraded as factual evidence.
 3. **Lineage Preservation**: Every concept is a node in a directed acyclic graph (DAG) recording its origin, parent ideas, creative operator, mutated assumptions, and survival rationale.
-4. **Provider-Agnostic Search**: Built-in support for deterministic/mock execution (for offline testing and CI), local Ollama models, and OpenAI-compatible endpoints.
+4. **Provider-Agnostic Search**: Built-in support for deterministic/mock execution (for offline testing and CI), explicitly opted-in local Ollama, OpenAI-compatible endpoints, and trusted remote CLI commands.
 
 ---
 
@@ -127,3 +127,17 @@ python -m compileall src/ tests/
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.
+
+## Provider safety and candidate development
+
+Version 0.2.0 defaults to labeled authored fixtures, never automatic Ollama discovery.
+`HOWL_FORBID_LOCAL_INFERENCE=1` overrides every local opt-in. Unknown providers fail.
+Exploration defaults to 32 attempts and evaluates in batches of eight. Strategic fit
+now means the user's objective; ecosystem weighting requires explicit opt-in.
+
+`develop` requires an explicit model provider; use `scaffold` for deterministic plans.
+Typed Dream exports preserve source identities and provenance. See
+[providers, budgets, interoperability and migration](docs/PROVIDERS_AND_INTEROP.md).
+
+Verification CI sets `HOWL_FORBID_LOCAL_INFERENCE=1`. The shared provider dependency
+is pinned to its final reviewed commit, including portable command-provider tests.

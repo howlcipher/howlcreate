@@ -30,7 +30,7 @@ class AdversarialCritiqueOperator(BaseOperator):
 
         prompt = (
             f"You are the Adversarial Red-Team Critic in HowlCreate.\n\n"
-            f"Core Problem: \"{problem}\"\n"
+            f'Core Problem: "{problem}"\n'
             f"Target Concept Under Attack:\n"
             f"- Title: {target_idea.title}\n"
             f"- Description: {target_idea.description}\n"
@@ -46,7 +46,7 @@ class AdversarialCritiqueOperator(BaseOperator):
             f'    "vulnerabilities": ["Vulnerability 1", "Vulnerability 2"],\n'
             f'    "unconsidered_costs": ["Overlooked cost or friction"],\n'
             f'    "defensive_mutations": ["Adaptation 1", "Adaptation 2"]\n'
-            f'  }},\n'
+            f"  }},\n"
             f'  "hardened_idea": {{\n'
             f'    "title": "Hardened Concept Title",\n'
             f'    "description": "Hardened concept description",\n'
@@ -54,11 +54,13 @@ class AdversarialCritiqueOperator(BaseOperator):
             f'    "safeguards_added": ["Safeguard A", "Safeguard B"],\n'
             f'    "speculations": ["Speculative properties"],\n'
             f'    "evidence_needs": ["Empirical verification needed"]\n'
-            f'  }}\n'
+            f"  }}\n"
             f"}}\n"
         )
 
-        resp = provider.generate(prompt, json_mode=True, temperature=0.7)
+        resp = provider.generate_for(
+            self.operator_type.value, prompt, json_mode=True, temperature=0.7
+        )
         data = resp.extract_json() or {}
 
         critique_data = data.get("criticism") or data.get("critique") or {}
@@ -91,6 +93,12 @@ class AdversarialCritiqueOperator(BaseOperator):
             )
             ideas.append(hardened)
 
+        for generated in ideas:
+            generated.provenance.update(
+                producer_component="howlcreate",
+                execution=resp.metadata.get("execution"),
+                transformations=[self.operator_type.value],
+            )
         return OperatorResult(
             operator_type=OperatorType.ADVERSARIAL_CRITIQUE,
             ideas=ideas,

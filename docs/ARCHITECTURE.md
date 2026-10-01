@@ -112,7 +112,7 @@ Ideas are never evaluated by a single flattened score. HowlCreate evaluates acro
 2. `feasibility`: Implementation viability with existing tools.
 3. `usefulness`: Direct tangible impact on the core problem.
 4. `simplicity`: Elegance and minimization of moving parts.
-5. `strategic_fit`: Alignment with the sovereign, verifiable principles of the Howl ecosystem.
+5. `strategic_fit`: Alignment with the supplied user objective and constraints. Ecosystem relevance is a separate optional dimension with zero default weight.
 
 Crucially, every score records an **uncertainty bound** (e.g., `score: 0.85, uncertainty: 0.20`), preventing premature false precision.
 
@@ -130,3 +130,12 @@ To prevent all finalists from being slight variations of the same high-scoring i
 HowlCreate maintains strict separation from execution and communication:
 - **Handoff to HowlFrame**: Concept hypotheses, explicit assumptions, and required evidence are exported via `export_howlframe_contract()` for formal verification and proof bounding.
 - **Handoff to HowlPlane**: Selected finalists with core mechanisms, constraints, and dependencies are exported via `export_howlplane_contract()` for task decomposition, execution graphs, and agent routing.
+
+## Shared execution boundary
+
+Provider safety, guarded transport, command lifecycle, and budget primitives live in
+howl-provider-core. Creative operators, ranking and artifact conversion remain here.
+Dream retains canonical contract ownership; Create vendors generated schemas rather
+than depending on Dream's engine. This adds one small release dependency and avoids
+copying transport safety into both components or importing Plane's tool-authority executor.
+See PROVIDERS_AND_INTEROP.md for trust boundaries and compatibility changes.

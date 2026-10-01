@@ -7,17 +7,28 @@ from dataclasses import dataclass, field
 import json
 import re
 from typing import Any, Dict, Optional
+from howl_provider_core import ProviderError
+
+
+def _unique_keys(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ProviderError("duplicate JSON response key")
+        result[key] = value
+    return result
 
 
 @dataclass
 class ProviderResponse:
     """Standardized response from any model provider."""
+
     content: str
     model: str
     provider: str
     structured_data: Optional[Dict[str, Any]] = None
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
     latency_seconds: float = 0.0
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -32,7 +43,7 @@ class ProviderResponse:
         if fence_match:
             candidate = fence_match.group(1).strip()
             try:
-                data = json.loads(candidate)
+                data = json.loads(candidate, object_pairs_hook=_unique_keys)
                 if isinstance(data, dict):
                     return data
             except json.JSONDecodeError:
@@ -43,14 +54,14 @@ class ProviderResponse:
         if curly_match:
             candidate = curly_match.group(1).strip()
             try:
-                data = json.loads(candidate)
+                data = json.loads(candidate, object_pairs_hook=_unique_keys)
                 if isinstance(data, dict):
                     return data
             except json.JSONDecodeError:
                 pass
 
         try:
-            data = json.loads(text)
+            data = json.loads(text, object_pairs_hook=_unique_keys)
             if isinstance(data, dict):
                 return data
         except json.JSONDecodeError:
@@ -64,6 +75,13 @@ class BaseProvider(ABC):
 
     def __init__(self, model_name: str = "default"):
         self.model_name = model_name
+
+    def generate_for(self, operation: str, prompt: str, **kwargs) -> ProviderResponse:
+        """Explicit operation identity; legacy adapters need only implement generate."""
+        response = self.generate(prompt, **kwargs)
+        if kwargs.get("json_mode") and response.extract_json() is None:
+            raise ProviderError("provider returned malformed structured output")
+        return response
 
     @abstractmethod
     def generate(

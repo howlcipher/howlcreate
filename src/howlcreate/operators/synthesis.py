@@ -28,7 +28,7 @@ class SynthesisOperator(BaseOperator):
 
         candidates = context_ideas[:5]
         ideas_summary = "\n".join(
-            f"Idea {i+1} [ID: {c.id}]: '{c.title}'\n"
+            f"Idea {i + 1} [ID: {c.id}]: '{c.title}'\n"
             f"  Core: {c.core_mechanism or c.description}\n"
             f"  Origin: {c.origin} | Strengths: {', '.join(c.mutations or ['novel angle'])}"
             for i, c in enumerate(candidates)
@@ -36,7 +36,7 @@ class SynthesisOperator(BaseOperator):
 
         prompt = (
             f"You are the Synthesis Operator in HowlCreate.\n\n"
-            f"Problem: \"{problem}\"\n\n"
+            f'Problem: "{problem}"\n\n'
             f"Pool of Candidate Concepts:\n{ideas_summary}\n\n"
             f"Synthesis Protocol:\n"
             f"1. Identify complementary strengths across these candidates (e.g. Concept A's incentive structure + Concept B's verification gate + Concept C's offline resilience).\n"
@@ -45,7 +45,7 @@ class SynthesisOperator(BaseOperator):
             f"Return valid JSON:\n"
             f"{{\n"
             f'  "ideas": [\n'
-            f'    {{\n'
+            f"    {{\n"
             f'      "title": "Synthesized Concept Title",\n'
             f'      "parent_concept_ids": ["id-1", "id-2"],\n'
             f'      "description": "Comprehensive integrated concept description",\n'
@@ -53,12 +53,14 @@ class SynthesisOperator(BaseOperator):
             f'      "integrated_strengths": "How it combines strengths",\n'
             f'      "speculations": ["Speculative benefits"],\n'
             f'      "evidence_needs": ["Empirical verification needed"]\n'
-            f'    }}\n'
-            f'  ]\n'
+            f"    }}\n"
+            f"  ]\n"
             f"}}\n"
         )
 
-        resp = provider.generate(prompt, json_mode=True, temperature=0.7)
+        resp = provider.generate_for(
+            self.operator_type.value, prompt, json_mode=True, temperature=0.7
+        )
         data = resp.extract_json() or {}
 
         parent_ids = [c.id for c in candidates]
@@ -67,7 +69,9 @@ class SynthesisOperator(BaseOperator):
             c_id = f"idea-{uuid.uuid4().hex[:6]}"
             claimed_parents = raw.get("parent_concept_ids", parent_ids[:2])
             # filter to parents that actually exist
-            valid_parents = [p for p in claimed_parents if any(c.id == p for c in candidates)] or parent_ids[:2]
+            valid_parents = [
+                p for p in claimed_parents if any(c.id == p for c in candidates)
+            ] or parent_ids[:2]
             idea = Idea(
                 id=c_id,
                 title=raw.get("title", "Synthesized Concept Architecture"),
@@ -85,6 +89,12 @@ class SynthesisOperator(BaseOperator):
             )
             ideas.append(idea)
 
+        for generated in ideas:
+            generated.provenance.update(
+                producer_component="howlcreate",
+                execution=resp.metadata.get("execution"),
+                transformations=[self.operator_type.value],
+            )
         return OperatorResult(
             operator_type=OperatorType.SYNTHESIS,
             ideas=ideas,

@@ -21,6 +21,26 @@ from howlcreate.formatting import (
 from howlcreate.operators.assumptions import AssumptionOperator
 from howlcreate.operators.reframing import ReframingOperator
 from howlcreate.providers.registry import registry
+from howlcreate.providers.runtime import RemoteCommandProvider, TrackedProvider, FallbackProvider
+from howl_provider_core import CallBudget, CommandConfig
+
+
+def _provider(args):
+    def resolve(name):
+        if name == "command":
+            if getattr(args, "model", None):
+                raise ValueError("command model selection belongs in reviewed argv, not --model")
+            if not getattr(args, "command_config", None):
+                raise ValueError("command requires explicit --command-config")
+            return RemoteCommandProvider(CommandConfig.read(Path(args.command_config)))
+        return registry.get_provider(name, allow_local=getattr(args, "allow_local", False))
+
+    primary = resolve(args.provider)
+    fallback = getattr(args, "fallback", [])
+    if fallback:
+        # Resolve and validate the entire authorized chain before the first call.
+        return FallbackProvider([primary] + [resolve(name) for name in fallback], args.provider)
+    return primary
 
 
 def _print_step(phase: str, payload: dict) -> None:
@@ -28,9 +48,11 @@ def _print_step(phase: str, payload: dict) -> None:
         print(f"  [>] {payload.get('name')}...", flush=True)
     elif phase == "start":
         print(f"\n[HowlCreate] Initializing creative run: {payload.get('run_id')}")
-        print(f"  Problem: \"{payload.get('problem')}\"\n")
+        print(f'  Problem: "{payload.get("problem")}"\n')
     elif phase == "complete":
-        print(f"\n[HowlCreate] Exploration finished: {payload.get('total_concepts_explored')} concepts explored across divergent branches.")
+        print(
+            f"\n[HowlCreate] Exploration finished: {payload.get('total_concepts_explored')} concepts explored across divergent branches."
+        )
         print(f"  Converged to {payload.get('finalists_selected')} top diverse finalists.\n")
 
 
@@ -38,13 +60,15 @@ def cmd_explore(args: argparse.Namespace) -> int:
     """Execute the full divergent & convergent creative exploration pipeline."""
     config = PipelineConfig(
         top_n=args.top_n,
+        max_calls=args.max_calls,
+        ecosystem_fit_weight=args.ecosystem_fit_weight,
         provider_name=args.provider,
         on_step_callback=_print_step if not args.quiet else None,
     )
     pipeline = CreativePipeline(config=config)
 
     # Optional model override
-    provider = registry.get_provider(args.provider)
+    provider = _provider(args)
     if args.model:
         provider.model_name = args.model
 
@@ -68,19 +92,20 @@ def cmd_explore(args: argparse.Namespace) -> int:
     else:
         print(output_text)
 
-    return 0
+    return 1 if record.metadata.get("status") == "PARTIAL" else 0
 
 
 def cmd_assumptions(args: argparse.Namespace) -> int:
     """Extract explicit & implicit assumptions and generate inversions."""
-    provider = registry.get_provider(args.provider)
+    provider = _provider(args)
     if args.model:
         provider.model_name = args.model
 
     op = AssumptionOperator()
+    provider = TrackedProvider(provider, CallBudget(args.max_calls), args.provider)
     res = op.execute(args.problem, provider)
 
-    print(f"\n# Assumptions & Inversions for: \"{args.problem}\"\n")
+    print(f'\n# Assumptions & Inversions for: "{args.problem}"\n')
     for a in res.assumptions:
         print(f"- Assumption ({'Implicit' if a.is_implicit else 'Explicit'}): {a.statement}")
         if a.vulnerability:
@@ -100,14 +125,15 @@ def cmd_assumptions(args: argparse.Namespace) -> int:
 
 def cmd_reframe(args: argparse.Namespace) -> int:
     """Reframe a problem through diverse stakeholder perspectives."""
-    provider = registry.get_provider(args.provider)
+    provider = _provider(args)
     if args.model:
         provider.model_name = args.model
 
     op = ReframingOperator()
+    provider = TrackedProvider(provider, CallBudget(args.max_calls), args.provider)
     res = op.execute(args.problem, provider)
 
-    print(f"\n# Reframing Lenses for: \"{args.problem}\"\n")
+    print(f'\n# Reframing Lenses for: "{args.problem}"\n')
     for r in res.reframings:
         print(f"## Perspective: {r.perspective}")
         print(f"  Reframed Question: {r.reframed_question}")
@@ -161,6 +187,12 @@ def cmd_export(args: argparse.Namespace) -> int:
 
     if args.target == "plane":
         payload = export_howlplane_contract(record)
+    elif args.target == "dream":
+        from howlcreate.formatting.dream import export_dream_candidate
+
+        if not args.candidate_id:
+            raise ValueError("--target dream requires --candidate-id")
+        payload = export_dream_candidate(record, args.candidate_id)
     elif args.target == "frame":
         payload = export_howlframe_contract(record)
     else:
@@ -186,14 +218,20 @@ def cmd_list(args: argparse.Namespace) -> int:
     print(f"\n{'Run ID':<16} {'Created':<26} {'Finalists':<10} Problem")
     print("-" * 80)
     for r in runs:
-        print(f"{r['run_id']:<16} {r['created_at'][:19]:<26} {r['finalists_count']:<10} {r['problem'][:35]}...")
+        print(
+            f"{r['run_id']:<16} {r['created_at'][:19]:<26} {r['finalists_count']:<10} {r['problem'][:35]}..."
+        )
     print()
     return 0
 
 
 def cmd_develop(args: argparse.Namespace) -> int:
     """Ingest a candidate handoff and assessment, producing a deliberate development plan."""
-    from howlcreate.engine.candidate_ingestion import develop_candidate, IngestionError
+    from howlcreate.engine.candidate_ingestion import (
+        develop_candidate,
+        scaffold_candidate,
+        IngestionError,
+    )
 
     cand_path = Path(args.candidate_file)
     assess_path = Path(args.assessment)
@@ -209,7 +247,14 @@ def cmd_develop(args: argparse.Namespace) -> int:
     assess_data = json.loads(assess_path.read_text(encoding="utf-8"))
 
     try:
-        dev_res = develop_candidate(cand_data, assess_data)
+        if args.command == "scaffold":
+            dev_res = scaffold_candidate(cand_data, assess_data)
+        else:
+            if args.provider in {"auto", "deterministic"}:
+                raise IngestionError("develop requires an explicit model provider; use scaffold")
+            dev_res = develop_candidate(
+                cand_data, assess_data, _provider(args), max_calls=args.max_calls
+            )
     except IngestionError as e:
         print(f"Ingestion rejected: {e}", file=sys.stderr)
         return 2
@@ -233,25 +278,46 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # explore / run / create
-    explore_parser = subparsers.add_parser("explore", aliases=["run", "create"], help="Run full creative exploration pipeline")
+    explore_parser = subparsers.add_parser(
+        "explore", aliases=["run", "create"], help="Run full creative exploration pipeline"
+    )
     explore_parser.add_argument("problem", type=str, help="Problem statement to explore")
-    explore_parser.add_argument("--provider", type=str, default="auto", help="Provider (auto, deterministic, ollama, openai)")
+    explore_parser.add_argument("--ecosystem-fit-weight", type=float, default=0.0)
+    explore_parser.add_argument(
+        "--provider",
+        type=str,
+        default="auto",
+        help="Provider (auto, deterministic, ollama, openai)",
+    )
     explore_parser.add_argument("--model", type=str, default=None, help="Model identifier")
-    explore_parser.add_argument("--top-n", type=int, default=3, help="Number of diverse finalists to converge to")
+    explore_parser.add_argument(
+        "--top-n", type=int, default=3, help="Number of diverse finalists to converge to"
+    )
     explore_parser.add_argument("--output", "-o", type=str, help="Save report to file")
-    explore_parser.add_argument("--format", choices=["markdown", "json"], default=None, help="Output format (defaults to json if --output ends with .json, otherwise markdown)")
-    explore_parser.add_argument("--quiet", "-q", action="store_true", help="Suppress progress output")
+    explore_parser.add_argument(
+        "--format",
+        choices=["markdown", "json"],
+        default=None,
+        help="Output format (defaults to json if --output ends with .json, otherwise markdown)",
+    )
+    explore_parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Suppress progress output"
+    )
     explore_parser.set_defaults(func=cmd_explore)
 
     # assumptions
-    asm_parser = subparsers.add_parser("assumptions", help="Extract and invert implicit assumptions")
+    asm_parser = subparsers.add_parser(
+        "assumptions", help="Extract and invert implicit assumptions"
+    )
     asm_parser.add_argument("problem", type=str, help="Problem statement")
     asm_parser.add_argument("--provider", type=str, default="auto", help="Provider")
     asm_parser.add_argument("--model", type=str, default=None, help="Model identifier")
     asm_parser.set_defaults(func=cmd_assumptions)
 
     # reframe
-    reframe_parser = subparsers.add_parser("reframe", help="Reframe problem from multiple stakeholder lenses")
+    reframe_parser = subparsers.add_parser(
+        "reframe", help="Reframe problem from multiple stakeholder lenses"
+    )
     reframe_parser.add_argument("problem", type=str, help="Problem statement")
     reframe_parser.add_argument("--provider", type=str, default="auto", help="Provider")
     reframe_parser.add_argument("--model", type=str, default=None, help="Model identifier")
@@ -266,26 +332,47 @@ def build_parser() -> argparse.ArgumentParser:
     # graph
     graph_parser = subparsers.add_parser("graph", help="Show concept lineage DAG")
     graph_parser.add_argument("run_id", type=str, help="Run ID or file path")
-    graph_parser.add_argument("--mermaid", action="store_true", help="Render as Mermaid diagram code")
+    graph_parser.add_argument(
+        "--mermaid", action="store_true", help="Render as Mermaid diagram code"
+    )
     graph_parser.set_defaults(func=cmd_graph)
 
     # export
-    export_parser = subparsers.add_parser("export", help="Export handoff contract for HowlPlane or HowlFrame")
+    export_parser = subparsers.add_parser(
+        "export", help="Export handoff contract for HowlPlane or HowlFrame"
+    )
     export_parser.add_argument("run_id", type=str, help="Run ID or file path")
-    export_parser.add_argument("--target", choices=["plane", "frame", "raw"], default="plane", help="Target ecosystem contract")
+    export_parser.add_argument(
+        "--target",
+        choices=["plane", "frame", "raw", "dream"],
+        default="plane",
+        help="Target ecosystem contract",
+    )
     export_parser.add_argument("--output", "-o", type=str, help="Output destination file")
+    export_parser.add_argument("--candidate-id")
     export_parser.set_defaults(func=cmd_export)
 
     # list
     list_parser = subparsers.add_parser("list", help="List all stored runs")
     list_parser.set_defaults(func=cmd_list)
 
-    # develop
-    develop_parser = subparsers.add_parser("develop", help="Ingest a HowlFrame-promoted candidate for deliberate sandbox development")
-    develop_parser.add_argument("candidate_file", type=str, help="Path to howl.candidate/v1 JSON file")
-    develop_parser.add_argument("--assessment", "-a", type=str, required=True, help="Path to howl.assessment/v1 JSON file")
-    develop_parser.add_argument("--output", "-o", type=str, help="Output destination file")
-    develop_parser.set_defaults(func=cmd_develop)
+    for name in ("develop", "scaffold"):
+        sub = subparsers.add_parser(name, help="Candidate-specific advisory " + name)
+        sub.add_argument("candidate_file")
+        sub.add_argument("--assessment", "-a", required=True)
+        sub.add_argument("--output", "-o")
+        sub.add_argument("--provider", default="auto")
+        sub.set_defaults(func=cmd_develop)
+    for sub in set(subparsers.choices.values()):
+        if any(action.dest == "provider" for action in sub._actions):
+            sub.add_argument(
+                "--command-config",
+                type=Path,
+                help="Explicit trusted operator JSON profile (never discovered)",
+            )
+            sub.add_argument("--allow-local", action="store_true")
+            sub.add_argument("--max-calls", type=int, default=32)
+            sub.add_argument("--fallback", nargs="*", default=[])
 
     return parser
 
@@ -299,7 +386,12 @@ def main(argv: Optional[list[str]] = None) -> int:
         return 0
 
     if hasattr(args, "func"):
-        return args.func(args)
+        try:
+            return args.func(args)
+        except (ValueError, RuntimeError, OSError) as error:
+            message = str(error) if isinstance(error, ValueError) else "Provider or input failed"
+            print(f"Error: {message}", file=sys.stderr)
+            return 2
 
     return 0
 

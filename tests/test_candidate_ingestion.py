@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 import pytest
 
-from howlcreate.engine.candidate_ingestion import develop_candidate, IngestionError
+from howlcreate.engine.candidate_ingestion import scaffold_candidate, IngestionError
 
 
 def make_payloads():
@@ -18,6 +18,7 @@ def make_payloads():
         "objective": "Explore alternative diagnostic strategies for deployment timeouts",
         "text": "IDEA: eBPF socket tracing probes on staging ingress proxies to catch TCP RST packets during blue-green switchovers",
         "condition": "dream",
+        "provenance": {"producer_component": "howldream"},
         "trust": "UNVERIFIED",
         "status": "LOCALLY_VERIFIED",
         "authority": {"type": "ADVISORY", "executable": False},
@@ -36,7 +37,7 @@ def make_payloads():
         "candidate_id": "run-20260911-001/candidates/0/1",
         "disposition": "ACCEPT_FOR_DEVELOPMENT",
         "confidence": "MEDIUM",
-        "reason": "sufficient evidence invariants passed for deliberate development",
+        "provenance": {"producer_component": "operator", "rationale": "supplied assessment"},
         "authority": {"type": "ADVISORY", "executable": False},
     }
     return candidate, assessment
@@ -44,7 +45,7 @@ def make_payloads():
 
 def test_develop_candidate_accepted():
     cand, assess = make_payloads()
-    result = develop_candidate(cand, assess)
+    result = scaffold_candidate(cand, assess)
 
     assert result["schema_version"] == "howl.development_result/v1"
     assert result["source_candidate_id"] == cand["candidate_id"]
@@ -75,7 +76,7 @@ def test_develop_candidate_rejected_fails_closed():
     assess["disposition"] = "REJECT"
 
     with pytest.raises(IngestionError, match="must be 'ACCEPT_FOR_DEVELOPMENT'"):
-        develop_candidate(cand, assess)
+        scaffold_candidate(cand, assess)
 
 
 def test_develop_candidate_unresolved_fails_closed():
@@ -83,7 +84,7 @@ def test_develop_candidate_unresolved_fails_closed():
     assess["disposition"] = "UNRESOLVED"
 
     with pytest.raises(IngestionError, match="must be 'ACCEPT_FOR_DEVELOPMENT'"):
-        develop_candidate(cand, assess)
+        scaffold_candidate(cand, assess)
 
 
 def test_develop_candidate_authority_escalation_fails_closed():
@@ -91,13 +92,13 @@ def test_develop_candidate_authority_escalation_fails_closed():
     cand["authority"]["executable"] = True
 
     with pytest.raises(IngestionError, match="Authority escalation prohibited"):
-        develop_candidate(cand, assess)
+        scaffold_candidate(cand, assess)
 
     cand, assess = make_payloads()
     assess["authority"]["type"] = "EXECUTIVE"
 
     with pytest.raises(IngestionError, match="Authority escalation prohibited"):
-        develop_candidate(cand, assess)
+        scaffold_candidate(cand, assess)
 
 
 def test_cli_develop(tmp_path: Path):
@@ -113,7 +114,7 @@ def test_cli_develop(tmp_path: Path):
         sys.executable,
         "-m",
         "howlcreate.cli.main",
-        "develop",
+        "scaffold",
         str(cand_file),
         "--assessment",
         str(assess_file),

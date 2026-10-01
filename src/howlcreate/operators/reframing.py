@@ -37,7 +37,7 @@ class ReframingOperator(BaseOperator):
 
         prompt = (
             f"You are the Reframing Operator in HowlCreate.\n\n"
-            f"Original Problem: \"{problem}\"\n\n"
+            f'Original Problem: "{problem}"\n\n'
             f"Reflect on this problem through the following perspectives:\n"
             f"{perspectives_str}\n\n"
             f"Your task:\n"
@@ -46,26 +46,26 @@ class ReframingOperator(BaseOperator):
             f"Return valid JSON matching this schema:\n"
             f"{{\n"
             f'  "reframings": [\n'
-            f'    {{\n'
+            f"    {{\n"
             f'      "perspective": "Name of perspective",\n'
             f'      "reframed_question": "How can we...?",\n'
             f'      "core_focus": "The central insight or objective under this lens"\n'
-            f'    }}\n'
-            f'  ],\n'
+            f"    }}\n"
+            f"  ],\n"
             f'  "ideas": [\n'
-            f'    {{\n'
+            f"    {{\n"
             f'      "title": "Concept Name",\n'
             f'      "perspective_origin": "Which lens inspired this",\n'
             f'      "description": "Concept description",\n'
             f'      "core_mechanism": "How it addresses the reframed question",\n'
             f'      "speculations": ["Speculative assumptions or predictions"],\n'
             f'      "evidence_needs": ["Empirical verification needed"]\n'
-            f'    }}\n'
-            f'  ]\n'
+            f"    }}\n"
+            f"  ]\n"
             f"}}\n"
         )
 
-        resp = provider.generate(prompt, json_mode=True)
+        resp = provider.generate_for(self.operator_type.value, prompt, json_mode=True)
         data = resp.extract_json() or {}
 
         reframings: List[ReframingLens] = []
@@ -97,6 +97,12 @@ class ReframingOperator(BaseOperator):
             )
             ideas.append(idea)
 
+        for generated in ideas:
+            generated.provenance.update(
+                producer_component="howlcreate",
+                execution=resp.metadata.get("execution"),
+                transformations=[self.operator_type.value],
+            )
         return OperatorResult(
             operator_type=OperatorType.REFRAMING,
             ideas=ideas,
