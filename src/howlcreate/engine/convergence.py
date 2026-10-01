@@ -58,7 +58,17 @@ class ConvergenceEngine:
             self.weights["ecosystem_fit"] = ecosystem_fit_weight
 
     def evaluate_hard_constraints(self, idea: Idea, hard_constraints: List[str]) -> List[str]:
-        """Determine if an idea violates any mandatory hard constraint."""
+        """Determine if an idea violates any mandatory hard constraint.
+
+        Mandatory constraints include:
+        - Negative prohibitions: 'no ...', 'zero ...', 'do not use ...', 'do not ...',
+          'never ...', 'must not ...', 'cannot ...', 'must run without ...'
+        - Positive requirements: 'must have ...', 'must include ...', 'must support ...',
+          'must use ...', 'requires ...', 'mandatory: ...'
+
+        Soft preferences ('prefer ...', 'preferred', 'avoid ... when practical', 'optional',
+        'acceptable') are recognized as non-gating and do not disqualify candidates at the hard gate.
+        """
         violations: List[str] = []
         if hasattr(idea, "constraints_violated") and idea.constraints_violated:
             violations.extend(idea.constraints_violated)
@@ -68,9 +78,45 @@ class ConvergenceEngine:
         combined_text = f"{idea.title} {idea.description} {idea.core_mechanism}".lower()
         criticisms_text = " ".join(idea.criticisms).lower()
 
+        preference_markers = [
+            "prefer ",
+            "preferred",
+            "is preferred",
+            "acceptable",
+            "when practical",
+            "where practical",
+            "optional",
+            "nice to have",
+        ]
+
+        def _is_negated_or_compliant(text: str, term: str) -> bool:
+            """Check if occurrences of term in text appear in a negated/compliant context."""
+            patterns = [
+                rf"\bwithout\s+(?:using\s+)?{re.escape(term)}\b",
+                rf"\bno\s+(?:reliance\s+on\s+)?{re.escape(term)}\b",
+                rf"\bzero\s+{re.escape(term)}\b",
+                rf"\bnever\s+(?:persist\s+|use\s+|store\s+|rely\s+on\s+)?{re.escape(term)}\b",
+                rf"\bdo\s+not\s+(?:use\s+|persist\s+|rely\s+on\s+)?{re.escape(term)}\b",
+                rf"\bdoes\s+not\s+(?:use\s+|require\s+|need\s+|persist\s+|rely\s+on\s+)?{re.escape(term)}\b",
+                rf"\bnot\s+(?:using\s+|persisting\s+|requiring\s+)?{re.escape(term)}\b",
+                rf"\beliminat(?:es|ing)\s+(?:the\s+need\s+for\s+)?{re.escape(term)}\b",
+                rf"\bfree\s+from\s+{re.escape(term)}\b",
+                rf"\bavoid(?:s|ing)?\s+{re.escape(term)}\b",
+            ]
+            for pat in patterns:
+                if re.search(pat, text):
+                    return True
+            return False
+
         for hc in hard_constraints:
             hc_lower = hc.lower().strip()
-            # 1. Explicit violation markers in criticisms or text
+            # 1. Skip soft preferences that are not mandatory prohibitions or requirements
+            if any(pm in hc_lower for pm in preference_markers) and not any(
+                hc_lower.startswith(m) for m in ["must ", "never ", "cannot ", "mandatory:"]
+            ):
+                continue
+
+            # 2. Explicit violation markers in criticisms or text
             if (
                 f"violates {hc_lower}" in criticisms_text
                 or f"violates: {hc_lower}" in criticisms_text
@@ -81,9 +127,23 @@ class ConvergenceEngine:
                 violations.append(f"Constraint violation: {hc}")
                 continue
 
-            # 2. Negative constraint: "No X" or "Zero X"
-            if hc_lower.startswith("no ") or hc_lower.startswith("zero "):
-                forbidden = hc_lower.split(" ", 1)[1].strip()
+            # 3. Negative prohibitions
+            neg_match = None
+            neg_prefixes = [
+                (r"^(?:no|zero)\s+", ""),
+                (r"^(?:do\s+not\s+use|do\s+not)\s+", ""),
+                (r"^never\s+(?:use\s+|persist\s+)?", ""),
+                (r"^(?:must\s+not\s+use|must\s+not|cannot\s+use|cannot)\s+", ""),
+                (r"^must\s+run\s+without\s+", ""),
+            ]
+            for pat, repl in neg_prefixes:
+                m = re.match(pat, hc_lower)
+                if m:
+                    neg_match = re.sub(pat, repl, hc_lower).strip().rstrip(".")
+                    break
+
+            if neg_match:
+                forbidden = neg_match
                 base_forbidden = re.sub(
                     r"\b(reliance|usage|dependency|dependencies)\b", "", forbidden
                 ).strip()
@@ -96,37 +156,28 @@ class ConvergenceEngine:
                 matched_term = None
                 for term in terms_to_check:
                     if term and term in combined_text:
-                        if (
-                            f"without {term}" not in combined_text
-                            and f"no {term}" not in combined_text
-                            and f"zero {term}" not in combined_text
-                            and f"eliminates {term}" not in combined_text
-                            and f"free from {term}" not in combined_text
-                            and f"eliminating {term}" not in combined_text
-                        ):
+                        if not _is_negated_or_compliant(combined_text, term):
                             matched_term = term
                             break
                 if matched_term:
                     violations.append(f"Requires prohibited mechanism: {hc}")
+                continue
 
-            # 3. Positive constraint: "Must have X", "Requires X", "Must include X", "Must support X"
-            elif (
-                hc_lower.startswith("must have ")
-                or hc_lower.startswith("must include ")
-                or hc_lower.startswith("must support ")
-                or hc_lower.startswith("must use ")
-                or hc_lower.startswith("requires ")
-            ):
-                required = re.sub(
-                    r"^(must have|must include|must support|must use|requires)\s+", "", hc_lower
-                ).strip()
+            # 4. Positive requirements
+            pos_match = None
+            pos_prefixes = [
+                r"^(?:must\s+have|must\s+include|must\s+support|must\s+use|requires)\s+",
+                r"^(?:mandatory:|require:)\s*",
+            ]
+            for pat in pos_prefixes:
+                m = re.match(pat, hc_lower)
+                if m:
+                    pos_match = re.sub(pat, "", hc_lower).strip().rstrip(".")
+                    break
+
+            if pos_match:
+                required = pos_match
                 if required and required not in combined_text:
-                    violations.append(f"Missing mandatory requirement: {hc}")
-
-            # 4. Fallback for generic requirements: "require: X" or "mandatory: X"
-            elif hc_lower.startswith("mandatory:") or hc_lower.startswith("require:"):
-                req = hc_lower.split(":", 1)[1].strip()
-                if req and req not in combined_text:
                     violations.append(f"Missing mandatory requirement: {hc}")
 
         return list(dict.fromkeys(violations))
@@ -339,7 +390,7 @@ class ConvergenceEngine:
             return [], decisions
 
         # 3. Cluster eligible ideas to avoid duplicate finalists
-        clusters, outliers = self.deduplicator.cluster_ideas(eligible_ideas)
+        clusters, _outliers = self.deduplicator.cluster_ideas(eligible_ideas)
 
         # 4. Pick top representative per cluster from eligible ideas only
         cluster_champions: List[Idea] = []

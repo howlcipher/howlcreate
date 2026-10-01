@@ -185,3 +185,74 @@ def test_cli_explore_impossible_constraint_fails(tmp_path, monkeypatch):
     assert output_file.exists()
     data = json.loads(output_file.read_text(encoding="utf-8"))
     assert data["metadata"]["status"] == "NO_VIABLE_CANDIDATES"
+
+
+def test_hard_constraint_parsing_negative_and_positive_regression():
+    engine = ConvergenceEngine()
+
+    # 1. "Do not use wall-clock time."
+    violating_c1 = Idea(
+        id="c1",
+        title="Wall Clock Leases",
+        description="Renew leases using wall-clock time sync",
+        core_mechanism="wall-clock time sync",
+    )
+    compliant_c1 = Idea(
+        id="c2",
+        title="Lamport Leases",
+        description="Renew leases with monotonic counter and no wall clock reliance",
+        core_mechanism="monotonic generation counters",
+    )
+    assert len(engine.evaluate_hard_constraints(violating_c1, ["Do not use wall-clock time."])) == 1
+    assert len(engine.evaluate_hard_constraints(compliant_c1, ["Do not use wall-clock time."])) == 0
+
+    # 2. "Never persist credentials." with compliant phrasing
+    compliant_cred = Idea(
+        id="c3",
+        title="Ephemeral Secrets",
+        description="We never persist credentials to disk; keys are ephemeral in RAM",
+        core_mechanism="ephemeral memory keys without disk storage",
+    )
+    violating_cred = Idea(
+        id="c4",
+        title="On-disk Auth Store",
+        description="Persist credentials to encrypted local sqlite file",
+        core_mechanism="persist credentials in storage",
+    )
+    assert len(engine.evaluate_hard_constraints(compliant_cred, ["Never persist credentials."])) == 0
+    assert len(engine.evaluate_hard_constraints(violating_cred, ["Never persist credentials."])) == 1
+
+    # 3. "Must run without network access."
+    violating_net = Idea(
+        id="c5",
+        title="Cloud Synchronizer",
+        description="Fetches tokens via network access periodically",
+        core_mechanism="network access polling",
+    )
+    compliant_net = Idea(
+        id="c6",
+        title="Local Airgap Processor",
+        description="Runs completely offline without network access",
+        core_mechanism="airgapped local evaluation",
+    )
+    assert len(engine.evaluate_hard_constraints(violating_net, ["Must run without network access."])) == 1
+    assert len(engine.evaluate_hard_constraints(compliant_net, ["Must run without network access."])) == 0
+
+
+def test_soft_preferences_do_not_disqualify_candidates():
+    engine = ConvergenceEngine()
+    idea = Idea(
+        id="c_pref",
+        title="Postgres Container Service",
+        description="Uses Postgres and containerized deployments for modularity",
+        core_mechanism="relational storage with container isolation",
+    )
+    # None of these soft preferences should be treated as hard disqualifiers
+    soft_constraints = [
+        "Prefer SQLite, but Postgres is acceptable.",
+        "Avoid containers when practical.",
+        "Python is preferred.",
+    ]
+    violations = engine.evaluate_hard_constraints(idea, soft_constraints)
+    assert len(violations) == 0, f"Expected 0 violations for soft preferences, got: {violations}"
+
