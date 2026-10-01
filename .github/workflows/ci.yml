@@ -13,6 +13,8 @@ concurrency:
 
 permissions:
   contents: read
+env:
+  HOWL_FORBID_LOCAL_INFERENCE: '1'
 
 jobs:
   core:

@@ -1,5 +1,10 @@
 # Change log
 
+## Unreleased
+
+Pinned the final reviewed provider core with portable command tests. CI preserves
+`HOWL_FORBID_LOCAL_INFERENCE=1` for all verification commands.
+
 ## 0.2.0
 
 Added shared restrictive provider policy, trusted remote command adapters, explicit

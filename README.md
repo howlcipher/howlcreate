@@ -138,3 +138,6 @@ now means the user's objective; ecosystem weighting requires explicit opt-in.
 `develop` requires an explicit model provider; use `scaffold` for deterministic plans.
 Typed Dream exports preserve source identities and provenance. See
 [providers, budgets, interoperability and migration](docs/PROVIDERS_AND_INTEROP.md).
+
+Verification CI sets `HOWL_FORBID_LOCAL_INFERENCE=1`. The shared provider dependency
+is pinned to its final reviewed commit, including portable command-provider tests.
