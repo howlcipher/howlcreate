@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional
 import uuid
 
 from howlcreate.engine.convergence import ConvergenceEngine
@@ -42,6 +42,7 @@ class PipelineConfig:
     max_calls: int = 32
     save_run: bool = True
     custom_storage_dir: Optional[Path] = None
+    hard_constraints: Optional[List[str]] = None
     on_step_callback: Optional[Callable[[str, Dict[str, Any]], None]] = None
 
 
@@ -58,6 +59,7 @@ class CreativePipeline:
             deduplicator=self.deduplicator,
             top_n=self.config.top_n,
             ecosystem_fit_weight=self.config.ecosystem_fit_weight,
+            hard_constraints=self.config.hard_constraints,
         )
 
     def _notify(self, phase: str, payload: Dict[str, Any]) -> None:
@@ -224,15 +226,24 @@ class CreativePipeline:
                 "phase", {"name": "Multi-Dimensional Evaluation & Diversity-Preserving Convergence"}
             )
             all_ideas = list(graph.nodes.values())
-            finalists, decisions = self.convergence_engine.converge(
-                all_ideas, problem, active_provider
-            )
-
-            record.finalist_ids = [f.id for f in finalists]
-            record.decisions = decisions
+            if not all_ideas:
+                record.metadata["status"] = "INVALID_PROVIDER_OUTPUT"
+                record.metadata["stop_reason"] = "ZERO_CONCEPTS_GENERATED"
+            else:
+                finalists, decisions = self.convergence_engine.converge(
+                    all_ideas,
+                    problem,
+                    active_provider,
+                    hard_constraints=self.config.hard_constraints,
+                )
+                record.finalist_ids = [f.id for f in finalists]
+                record.decisions = decisions
+                if not finalists:
+                    record.metadata["status"] = "NO_VIABLE_CANDIDATES"
+                    record.metadata["stop_reason"] = "NO_VIABLE_CANDIDATES"
+                else:
+                    record.metadata["status"] = "COMPLETE"
             record.completed_at = datetime.now(timezone.utc).isoformat()
-
-            record.metadata["status"] = "COMPLETE"
         except BudgetExceeded:
             record.metadata.update(status="PARTIAL", stop_reason="BUDGET_EXHAUSTED")
         except (ProviderError, RuntimeError, ValueError) as error:

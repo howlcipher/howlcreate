@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 
 from typing import Dict, List, Optional, Tuple
 from howlcreate.engine.dedup import ConceptDeduplicator
@@ -41,9 +42,11 @@ class ConvergenceEngine:
         deduplicator: Optional[ConceptDeduplicator] = None,
         top_n: int = 3,
         ecosystem_fit_weight: float = 0.0,
+        hard_constraints: Optional[List[str]] = None,
     ):
         self.deduplicator = deduplicator or ConceptDeduplicator()
         self.top_n = top_n
+        self.hard_constraints = list(hard_constraints) if hard_constraints else []
         if not 0 <= ecosystem_fit_weight <= 1:
             raise ValueError("ecosystem_fit_weight must be between zero and one")
         self.dimensions = list(self.DEFAULT_DIMENSIONS)
@@ -53,6 +56,80 @@ class ConvergenceEngine:
         if ecosystem_fit_weight:
             self.dimensions.append("ecosystem_fit")
             self.weights["ecosystem_fit"] = ecosystem_fit_weight
+
+    def evaluate_hard_constraints(self, idea: Idea, hard_constraints: List[str]) -> List[str]:
+        """Determine if an idea violates any mandatory hard constraint."""
+        violations: List[str] = []
+        if hasattr(idea, "constraints_violated") and idea.constraints_violated:
+            violations.extend(idea.constraints_violated)
+        if idea.provenance.get("hard_constraint_violations"):
+            violations.extend(idea.provenance["hard_constraint_violations"])
+
+        combined_text = f"{idea.title} {idea.description} {idea.core_mechanism}".lower()
+        criticisms_text = " ".join(idea.criticisms).lower()
+
+        for hc in hard_constraints:
+            hc_lower = hc.lower().strip()
+            # 1. Explicit violation markers in criticisms or text
+            if (
+                f"violates {hc_lower}" in criticisms_text
+                or f"violates: {hc_lower}" in criticisms_text
+                or f"fails {hc_lower}" in criticisms_text
+                or f"violates {hc_lower}" in combined_text
+                or f"violates: {hc_lower}" in combined_text
+            ):
+                violations.append(f"Constraint violation: {hc}")
+                continue
+
+            # 2. Negative constraint: "No X" or "Zero X"
+            if hc_lower.startswith("no ") or hc_lower.startswith("zero "):
+                forbidden = hc_lower.split(" ", 1)[1].strip()
+                base_forbidden = re.sub(
+                    r"\b(reliance|usage|dependency|dependencies)\b", "", forbidden
+                ).strip()
+                terms_to_check = [forbidden]
+                if base_forbidden and base_forbidden != forbidden:
+                    terms_to_check.append(base_forbidden)
+                    terms_to_check.append(base_forbidden.replace("-", " "))
+                    terms_to_check.append(base_forbidden.replace(" ", "-"))
+
+                matched_term = None
+                for term in terms_to_check:
+                    if term and term in combined_text:
+                        if (
+                            f"without {term}" not in combined_text
+                            and f"no {term}" not in combined_text
+                            and f"zero {term}" not in combined_text
+                            and f"eliminates {term}" not in combined_text
+                            and f"free from {term}" not in combined_text
+                            and f"eliminating {term}" not in combined_text
+                        ):
+                            matched_term = term
+                            break
+                if matched_term:
+                    violations.append(f"Requires prohibited mechanism: {hc}")
+
+            # 3. Positive constraint: "Must have X", "Requires X", "Must include X", "Must support X"
+            elif (
+                hc_lower.startswith("must have ")
+                or hc_lower.startswith("must include ")
+                or hc_lower.startswith("must support ")
+                or hc_lower.startswith("must use ")
+                or hc_lower.startswith("requires ")
+            ):
+                required = re.sub(
+                    r"^(must have|must include|must support|must use|requires)\s+", "", hc_lower
+                ).strip()
+                if required and required not in combined_text:
+                    violations.append(f"Missing mandatory requirement: {hc}")
+
+            # 4. Fallback for generic requirements: "require: X" or "mandatory: X"
+            elif hc_lower.startswith("mandatory:") or hc_lower.startswith("require:"):
+                req = hc_lower.split(":", 1)[1].strip()
+                if req and req not in combined_text:
+                    violations.append(f"Missing mandatory requirement: {hc}")
+
+        return list(dict.fromkeys(violations))
 
     def evaluate_idea(
         self,
@@ -150,10 +227,15 @@ class ConvergenceEngine:
         ideas: List[Idea],
         problem: str,
         provider: BaseProvider,
+        hard_constraints: Optional[List[str]] = None,
     ) -> Tuple[List[Idea], Dict[str, ConvergenceDecision]]:
-        """Evaluate all ideas, cluster by similarity, and select diverse finalists with explicit rationale."""
+        """Evaluate all ideas, gate by hard constraints, cluster by similarity, and select diverse finalists."""
         if not ideas:
             return [], {}
+
+        active_constraints = (
+            list(hard_constraints) if hard_constraints is not None else list(self.hard_constraints)
+        )
 
         # One bounded request per batch, preserving each candidate's identity.
         pending = [idea for idea in ideas if not idea.evaluations]
@@ -172,17 +254,24 @@ class ConvergenceEngine:
                 }
                 for idea in batch
             ]
+            constraint_prompt = (
+                f"\nMandatory Hard Constraints: {json.dumps(active_constraints)}\n"
+                if active_constraints
+                else ""
+            )
             prompt = (
                 f'Problem: "{problem}"\n'
-                "Evaluate each candidate against the supplied objective, not ecosystem membership. "
+                f"{constraint_prompt}"
+                "Evaluate each candidate against the supplied objective and constraints, not ecosystem membership. "
                 'Return {"evaluations": {candidate_id: {"scores": {dimension: '
                 '{"score": number, "uncertainty": number, "rationale": string}}, '
-                '"strengths": [], "weaknesses": [], "critical_risks": []}}}. '
+                '"strengths": [], "weaknesses": [], "critical_risks": [], "constraint_violations": []}}}. '
                 "Scores and uncertainty must be between 0 and 1. Dimensions: "
                 + ", ".join(self.dimensions)
                 + ". strategic_fit means alignment with this user's objective and constraints. "
                 "novelty means difference from conventional approaches; feasibility means "
                 "implementability; usefulness means user value; simplicity means minimal complexity. "
+                "List any violated mandatory hard constraints under constraint_violations. "
                 "Distinguish scores and state uncertainty; do not invent supporting evidence.\n"
                 "CANDIDATES_JSON:\n" + json.dumps(payload)
             )
@@ -205,15 +294,54 @@ class ConvergenceEngine:
                         supplied_data=value,
                         evaluation_execution=response.metadata.get("execution"),
                     )
+                    reported_violations = value.get("constraint_violations", [])
+                    if isinstance(reported_violations, list) and reported_violations:
+                        idea.provenance.setdefault("hard_constraint_violations", []).extend(
+                            reported_violations
+                        )
                 except (KeyError, TypeError, ValueError):
                     errors.append("incomplete evaluation")
         if errors:
             raise ValueError("incomplete batch evaluation; valid scores retained, none fabricated")
 
-        # 2. Cluster to avoid duplicate finalists
-        clusters, outliers = self.deduplicator.cluster_ideas(ideas)
+        # 2. Hard constraint evaluation: partition ideas into eligible and ineligible
+        for idea in ideas:
+            violations = self.evaluate_hard_constraints(idea, active_constraints)
+            if violations:
+                idea.provenance["hard_constraint_violations"] = violations
 
-        # 3. Pick top representative per cluster
+        eligible_ideas = [
+            idea for idea in ideas if not idea.provenance.get("hard_constraint_violations")
+        ]
+        ineligible_ideas = [
+            idea for idea in ideas if idea.provenance.get("hard_constraint_violations")
+        ]
+
+        decisions: Dict[str, ConvergenceDecision] = {}
+
+        # If no eligible ideas exist, all candidates violated hard constraints
+        if not eligible_ideas:
+            for idea in ideas:
+                idea.status = ConceptStatus.SET_ASIDE
+                violations = idea.provenance.get(
+                    "hard_constraint_violations", ["Hard constraint violation"]
+                )
+                score = idea.composite_score()
+                decisions[idea.id] = ConvergenceDecision(
+                    idea_id=idea.id,
+                    status=ConceptStatus.SET_ASIDE.value,
+                    rationale=(
+                        f"Disqualified by hard constraint violation (score: {score:.2f}): "
+                        f"{'; '.join(violations)}. Candidate preserved as rejected evidence."
+                    ),
+                    risks_noted=violations,
+                )
+            return [], decisions
+
+        # 3. Cluster eligible ideas to avoid duplicate finalists
+        clusters, outliers = self.deduplicator.cluster_ideas(eligible_ideas)
+
+        # 4. Pick top representative per cluster from eligible ideas only
         cluster_champions: List[Idea] = []
         for cluster_id, members in clusters.items():
             sorted_members = sorted(members, key=lambda x: x.composite_score(), reverse=True)
@@ -238,16 +366,16 @@ class ConvergenceEngine:
                 finalist_ids.add(champ.id)
                 represented_clusters.add(champ_cluster)
 
-        # Look for high-novelty wildcard from unrepresented clusters/outliers first
+        # Look for high-novelty wildcard from unrepresented clusters/outliers (ELIGIBLE ONLY)
         remaining_unrepresented = [
             i
-            for i in ideas
+            for i in eligible_ideas
             if i.id not in finalist_ids and (i.cluster_id or i.id) not in represented_clusters
         ]
         pool_for_wildcard = (
             remaining_unrepresented
             if remaining_unrepresented
-            else [i for i in ideas if i.id not in finalist_ids]
+            else [i for i in eligible_ideas if i.id not in finalist_ids]
         )
 
         if pool_for_wildcard and len(finalists) < self.top_n:
@@ -267,10 +395,24 @@ class ConvergenceEngine:
         # Ensure we do not exceed top_n
         finalists = finalists[: self.top_n]
 
-        # 4. Formulate convergence decisions with inspectable rationale
-        decisions: Dict[str, ConvergenceDecision] = {}
+        # 5. Formulate convergence decisions with inspectable rationale
+        # First record ineligible candidates as set aside due to hard constraint violations
+        for idea in ineligible_ideas:
+            idea.status = ConceptStatus.SET_ASIDE
+            violations = idea.provenance.get("hard_constraint_violations", [])
+            score = idea.composite_score()
+            decisions[idea.id] = ConvergenceDecision(
+                idea_id=idea.id,
+                status=ConceptStatus.SET_ASIDE.value,
+                rationale=(
+                    f"Disqualified by hard constraint violation (score: {score:.2f}): "
+                    f"{'; '.join(violations)}. Candidate preserved as rejected evidence."
+                ),
+                risks_noted=violations,
+            )
 
-        for idea in ideas:
+        # Then record eligible candidates
+        for idea in eligible_ideas:
             if idea.id in finalist_ids:
                 idea.status = ConceptStatus.FINALIST
                 eval_inst = idea.evaluations[-1] if idea.evaluations else None
@@ -284,7 +426,7 @@ class ConvergenceEngine:
                     rationale=(
                         f"Selected as top finalist (composite score: {score:.2f}). "
                         f"Demonstrated distinct strategic mechanism in {idea.cluster_id or 'unique cluster'} "
-                        f"with superior balance of novelty and feasibility."
+                        f"with superior balance of novelty and feasibility, satisfying all hard constraints."
                     ),
                     strengths_emphasized=strengths,
                     risks_noted=risks,
