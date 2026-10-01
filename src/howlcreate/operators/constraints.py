@@ -36,11 +36,15 @@ class ConstraintMutationOperator(BaseOperator):
         mutations_str = "\n".join(f"- {m}" for m in mutations)
 
         seed_titles = [f"'{idea.title}'" for idea in (context_ideas or [])[:3]]
-        context_str = f"\nExisting seed concepts to stress-test or mutate: {', '.join(seed_titles)}" if seed_titles else ""
+        context_str = (
+            f"\nExisting seed concepts to stress-test or mutate: {', '.join(seed_titles)}"
+            if seed_titles
+            else ""
+        )
 
         prompt = (
             f"You are the Constraint Mutation Operator in HowlCreate.\n\n"
-            f"Problem: \"{problem}\"{context_str}\n\n"
+            f'Problem: "{problem}"{context_str}\n\n'
             f"Altered Constraints:\n{mutations_str}\n\n"
             f"Your task:\n"
             f"Formulate 2 to 3 concepts that thrive specifically under these radical constraint mutations.\n"
@@ -48,7 +52,7 @@ class ConstraintMutationOperator(BaseOperator):
             f"Return valid JSON:\n"
             f"{{\n"
             f'  "ideas": [\n'
-            f'    {{\n'
+            f"    {{\n"
             f'      "title": "Concept Name",\n'
             f'      "constraint_applied": "Which constraint mutation",\n'
             f'      "description": "How the solution operates under this constraint",\n'
@@ -56,12 +60,14 @@ class ConstraintMutationOperator(BaseOperator):
             f'      "underlying_principle": "What this reveals about the problem",\n'
             f'      "speculations": ["Speculative aspects"],\n'
             f'      "evidence_needs": ["Empirical verification needed"]\n'
-            f'    }}\n'
-            f'  ]\n'
+            f"    }}\n"
+            f"  ]\n"
             f"}}\n"
         )
 
-        resp = provider.generate(prompt, json_mode=True, temperature=0.8)
+        resp = provider.generate_for(
+            self.operator_type.value, prompt, json_mode=True, temperature=0.8
+        )
         data = resp.extract_json() or {}
 
         ideas: List[Idea] = []
@@ -85,6 +91,12 @@ class ConstraintMutationOperator(BaseOperator):
             )
             ideas.append(idea)
 
+        for generated in ideas:
+            generated.provenance.update(
+                producer_component="howlcreate",
+                execution=resp.metadata.get("execution"),
+                transformations=[self.operator_type.value],
+            )
         return OperatorResult(
             operator_type=OperatorType.CONSTRAINT_MUTATION,
             ideas=ideas,

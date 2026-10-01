@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 
 class EpistemicStatus(str, Enum):
     """Categorical boundary for claims, ensuring speculation is never conflated with fact."""
+
     FACT = "FACT"
     ASSUMPTION = "ASSUMPTION"
     SPECULATION = "SPECULATION"
@@ -21,6 +22,7 @@ class EpistemicStatus(str, Enum):
 
 class ConceptStatus(str, Enum):
     """Lifecycle state of a concept within the creative search."""
+
     CANDIDATE = "CANDIDATE"
     MUTATED = "MUTATED"
     COMBINED = "COMBINED"
@@ -33,6 +35,7 @@ class ConceptStatus(str, Enum):
 @dataclass
 class ScoreDetail:
     """Individual dimension score with rationale and uncertainty."""
+
     dimension: str
     score: float  # 0.0 to 1.0
     rationale: str = ""
@@ -59,6 +62,7 @@ class ScoreDetail:
 @dataclass
 class ConceptEvaluation:
     """Multi-criteria evaluation for an idea from an evaluator/persona."""
+
     evaluator_id: str
     scores: Dict[str, ScoreDetail] = field(default_factory=dict)
     strengths: List[str] = field(default_factory=list)
@@ -92,6 +96,7 @@ class ConceptEvaluation:
 @dataclass
 class Idea:
     """First-class representation of a creative concept."""
+
     id: str
     title: str
     description: str
@@ -112,10 +117,9 @@ class Idea:
     mutations: List[str] = field(default_factory=list)
     status: ConceptStatus = ConceptStatus.CANDIDATE
     evaluations: List[ConceptEvaluation] = field(default_factory=list)
+    provenance: Dict[str, Any] = field(default_factory=dict)
     cluster_id: Optional[str] = None
-    created_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     def composite_score(self) -> float:
         """Returns average composite score across all evaluators, if evaluated."""
@@ -145,6 +149,7 @@ class Idea:
             "mutations": self.mutations,
             "status": self.status.value,
             "evaluations": [e.to_dict() for e in self.evaluations],
+            "provenance": self.provenance,
             "cluster_id": self.cluster_id,
             "created_at": self.created_at,
         }
@@ -174,6 +179,7 @@ class Idea:
             mutations=data.get("mutations", []),
             status=ConceptStatus(data.get("status", ConceptStatus.CANDIDATE.value)),
             evaluations=[ConceptEvaluation.from_dict(e) for e in data.get("evaluations", [])],
+            provenance=data.get("provenance", {}),
             cluster_id=data.get("cluster_id"),
             created_at=data.get("created_at", datetime.now(timezone.utc).isoformat()),
         )
@@ -182,6 +188,7 @@ class Idea:
 @dataclass
 class LineageEdge:
     """Directed relationship between parent idea(s) and a derived idea."""
+
     parent_id: str
     child_id: str
     operator: str
@@ -208,6 +215,7 @@ class LineageEdge:
 @dataclass
 class LineageGraph:
     """DAG of concepts tracking provenance, operations, and concept evolution."""
+
     nodes: Dict[str, Idea] = field(default_factory=dict)
     edges: List[LineageEdge] = field(default_factory=list)
 
@@ -222,7 +230,11 @@ class LineageGraph:
         """Add a directed derivation edge."""
         # Avoid duplicate edges
         for edge in self.edges:
-            if edge.parent_id == parent_id and edge.child_id == child_id and edge.operator == operator:
+            if (
+                edge.parent_id == parent_id
+                and edge.child_id == child_id
+                and edge.operator == operator
+            ):
                 return
         self.edges.append(LineageEdge(parent_id, child_id, operator, rationale))
 

@@ -11,7 +11,20 @@ def format_markdown_report(record: RunRecord) -> str:
     lines: List[str] = []
 
     lines.append(f"# HowlCreate Exploration Report: {record.problem}\n")
-    lines.append(f"**Run ID**: `{record.run_id}` | **Generated**: {record.created_at} | **Total Explored**: {len(record.graph.nodes)} concepts\n")
+    lines.append(
+        f"**Run ID**: `{record.run_id}` | **Generated**: {record.created_at} | **Total Explored**: {len(record.graph.nodes)} concepts\n"
+    )
+    identities = sorted(
+        {event.get("actual_provider", "unknown") for event in record.metadata.get("executions", [])}
+    )
+    simulated = any(event.get("mocked") for event in record.metadata.get("executions", []))
+    lines.append(
+        f"**Actual providers**: {', '.join(identities) or 'none'}; "
+        f"**Calls**: {record.metadata.get('call_count', 'unknown')}; "
+        f"**Fixture output**: {simulated}; "
+        f"**Status**: {record.metadata.get('status', 'unknown')} "
+        f"{record.metadata.get('stop_reason', '')}\n"
+    )
     lines.append("---\n")
 
     # 1. Problem & Assumptions
@@ -21,7 +34,9 @@ def format_markdown_report(record: RunRecord) -> str:
     if record.assumptions:
         lines.append("### Uncovered Implicit Assumptions & Inversions")
         for a in record.assumptions:
-            lines.append(f"- **Assumption**: *\"{a.statement}\"* ({'Implicit' if a.is_implicit else 'Explicit'})")
+            lines.append(
+                f'- **Assumption**: *"{a.statement}"* ({"Implicit" if a.is_implicit else "Explicit"})'
+            )
             if a.vulnerability:
                 lines.append(f"  - *Vulnerability*: {a.vulnerability}")
             for inv in a.inversions:
@@ -44,12 +59,16 @@ def format_markdown_report(record: RunRecord) -> str:
     for i, idea in enumerate(finalists, 1):
         score = idea.composite_score()
         lines.append(f"### Finalist #{i}: {idea.title} (ID: `{idea.id}`)")
-        lines.append(f"**Composite Score**: `{score:.2f}/1.00` | **Status**: `{idea.status.value}` | **Epistemic Class**: `{idea.epistemic_status.value}`\n")
+        lines.append(
+            f"**Composite Score**: `{score:.2f}/1.00` | **Status**: `{idea.status.value}` | **Epistemic Class**: `{idea.epistemic_status.value}`\n"
+        )
         lines.append(f"**Description**: {idea.description}\n")
         if idea.core_mechanism:
             lines.append(f"**Core Mechanism**: {idea.core_mechanism}\n")
         if idea.origin:
-            lines.append(f"**Provenance / Origin**: `{idea.origin}` (Operator: `{idea.operator_used}`)")
+            lines.append(
+                f"**Provenance / Origin**: `{idea.origin}` (Operator: `{idea.operator_used}`)"
+            )
         if idea.parent_ids:
             lines.append(f"**Lineage Parents**: {', '.join(f'`{p}`' for p in idea.parent_ids)}")
 
@@ -60,7 +79,9 @@ def format_markdown_report(record: RunRecord) -> str:
             lines.append("| Dimension | Score | Uncertainty | Rationale |")
             lines.append("| :--- | :--- | :--- | :--- |")
             for dim, detail in ev.scores.items():
-                lines.append(f"| **{dim.title()}** | {detail.score:.2f} | ±{detail.uncertainty:.2f} | {detail.rationale} |")
+                lines.append(
+                    f"| **{dim.title()}** | {detail.score:.2f} | ±{detail.uncertainty:.2f} | {detail.rationale} |"
+                )
 
             if ev.strengths:
                 lines.append(f"\n- **Key Strengths**: {', '.join(ev.strengths)}")
@@ -71,7 +92,9 @@ def format_markdown_report(record: RunRecord) -> str:
         if idea.speculations:
             lines.append(f"- **Speculative Claims** (Unverified): {', '.join(idea.speculations)}")
         if idea.evidence_needs:
-            lines.append(f"- **Verification / Evidence Needs** (For HowlFrame): {', '.join(idea.evidence_needs)}")
+            lines.append(
+                f"- **Verification / Evidence Needs** (For HowlFrame): {', '.join(idea.evidence_needs)}"
+            )
 
         # Convergence Rationale
         decision = record.decisions.get(idea.id)
@@ -81,7 +104,9 @@ def format_markdown_report(record: RunRecord) -> str:
         lines.append("\n---\n")
 
     # 4. Set Aside Concepts & Rationale
-    non_finalists = [node for node in record.graph.nodes.values() if node.id not in record.finalist_ids]
+    non_finalists = [
+        node for node in record.graph.nodes.values() if node.id not in record.finalist_ids
+    ]
     if non_finalists:
         lines.append(f"## 4. Concepts Set Aside ({len(non_finalists)} Explored Concepts)\n")
         for nf in non_finalists:
@@ -94,9 +119,13 @@ def format_markdown_report(record: RunRecord) -> str:
     lines.append("## 5. Ecosystem Handoff Boundaries\n")
     lines.append("### A. Next Step for HowlFrame (Verification & Evidence Grounding)")
     lines.append("1. Extract explicit evidence needs from selected finalists.")
-    lines.append("2. Formulate HFIR verification assertions and test invariants to substantiate speculative claims.\n")
+    lines.append(
+        "2. Formulate HFIR verification assertions and test invariants to substantiate speculative claims.\n"
+    )
     lines.append("### B. Next Step for HowlPlane (Execution Planning)")
     lines.append("1. Take preferred finalist concept mechanism.")
-    lines.append("2. Decompose into dependency execution graphs, agent allocation, and task milestones.\n")
+    lines.append(
+        "2. Decompose into dependency execution graphs, agent allocation, and task milestones.\n"
+    )
 
     return "\n".join(lines)

@@ -14,11 +14,26 @@ class AnalogicalReasoningOperator(BaseOperator):
     """Imports structural solutions from unrelated physical, biological, and economic domains."""
 
     DOMAINS = [
-        ("Biology & Mycology", "Mycelial nutrient sharing, mycorrhizal fungal-root barter networks, stigmergy in ant colonies"),
-        ("Manufacturing & Supply Chain", "Kanban pull systems, decoupling buffers, Toyota Kata, poka-yoke error prevention"),
-        ("Game Design & Game Theory", "Fog of war, asymmetric player abilities, emergent gameplay, mechanism design"),
-        ("Ecology & Evolutionary Dynamics", "Niche differentiation, adaptive radiation, trophic cascades, commensalism"),
-        ("Civil & Maritime Engineering", "Bulkheads, lighthouse navigation, decentralized canal lock scheduling"),
+        (
+            "Biology & Mycology",
+            "Mycelial nutrient sharing, mycorrhizal fungal-root barter networks, stigmergy in ant colonies",
+        ),
+        (
+            "Manufacturing & Supply Chain",
+            "Kanban pull systems, decoupling buffers, Toyota Kata, poka-yoke error prevention",
+        ),
+        (
+            "Game Design & Game Theory",
+            "Fog of war, asymmetric player abilities, emergent gameplay, mechanism design",
+        ),
+        (
+            "Ecology & Evolutionary Dynamics",
+            "Niche differentiation, adaptive radiation, trophic cascades, commensalism",
+        ),
+        (
+            "Civil & Maritime Engineering",
+            "Bulkheads, lighthouse navigation, decentralized canal lock scheduling",
+        ),
     ]
 
     def __init__(self):
@@ -35,7 +50,7 @@ class AnalogicalReasoningOperator(BaseOperator):
 
         prompt = (
             f"You are the Analogical Reasoning Operator in HowlCreate.\n\n"
-            f"Problem: \"{problem}\"\n\n"
+            f'Problem: "{problem}"\n\n'
             f"Domain Sources for Analogy:\n{domains_formatted}\n\n"
             f"Your task:\n"
             f"1. Select 2 distinct domains above.\n"
@@ -44,7 +59,7 @@ class AnalogicalReasoningOperator(BaseOperator):
             f"Return valid JSON:\n"
             f"{{\n"
             f'  "ideas": [\n'
-            f'    {{\n'
+            f"    {{\n"
             f'      "title": "Concept Title",\n'
             f'      "source_domain": "Name of source domain",\n'
             f'      "analogy_explanation": "How the biological/engineering principle maps to this problem",\n'
@@ -52,12 +67,14 @@ class AnalogicalReasoningOperator(BaseOperator):
             f'      "core_mechanism": "Concrete working mechanism",\n'
             f'      "speculations": ["Speculative benefits"],\n'
             f'      "evidence_needs": ["Empirical verification tests"]\n'
-            f'    }}\n'
-            f'  ]\n'
+            f"    }}\n"
+            f"  ]\n"
             f"}}\n"
         )
 
-        resp = provider.generate(prompt, json_mode=True, temperature=0.8)
+        resp = provider.generate_for(
+            self.operator_type.value, prompt, json_mode=True, temperature=0.8
+        )
         data = resp.extract_json() or {}
 
         ideas: List[Idea] = []
@@ -80,6 +97,12 @@ class AnalogicalReasoningOperator(BaseOperator):
             )
             ideas.append(idea)
 
+        for generated in ideas:
+            generated.provenance.update(
+                producer_component="howlcreate",
+                execution=resp.metadata.get("execution"),
+                transformations=[self.operator_type.value],
+            )
         return OperatorResult(
             operator_type=OperatorType.ANALOGICAL_REASONING,
             ideas=ideas,

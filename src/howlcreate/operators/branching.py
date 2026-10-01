@@ -14,7 +14,9 @@ class IndependentBranchingOperator(BaseOperator):
     """Explores solution branches independently to prevent anchor bias and premature convergence."""
 
     def __init__(self, branch_archetype: str = "Explorer"):
-        super().__init__(OperatorType.INDEPENDENT_BRANCHING, f"branching_{branch_archetype.lower()}")
+        super().__init__(
+            OperatorType.INDEPENDENT_BRANCHING, f"branching_{branch_archetype.lower()}"
+        )
         self.branch_archetype = branch_archetype
 
     def execute(
@@ -29,7 +31,7 @@ class IndependentBranchingOperator(BaseOperator):
 
         prompt = (
             f"You are an Independent Creative Explorer in HowlCreate operating under the persona: '{self.branch_archetype}'.\n\n"
-            f"Problem: \"{problem}\"\n"
+            f'Problem: "{problem}"\n'
             f"Exploration Focus: {focus_domain}\n\n"
             f"Rules:\n"
             f"1. Generate 2 to 3 genuinely distinct approaches. Do NOT produce slight variations of the same idea.\n"
@@ -38,7 +40,7 @@ class IndependentBranchingOperator(BaseOperator):
             f"Return valid JSON:\n"
             f"{{\n"
             f'  "ideas": [\n'
-            f'    {{\n'
+            f"    {{\n"
             f'      "title": "Distinct Concept Title",\n'
             f'      "description": "Thorough concept description",\n'
             f'      "core_mechanism": "How it actually works",\n'
@@ -46,12 +48,14 @@ class IndependentBranchingOperator(BaseOperator):
             f'      "assumptions": ["Underlying assumptions"],\n'
             f'      "speculations": ["Speculative leaps"],\n'
             f'      "evidence_needs": ["What needs to be tested"]\n'
-            f'    }}\n'
-            f'  ]\n'
+            f"    }}\n"
+            f"  ]\n"
             f"}}\n"
         )
 
-        resp = provider.generate(prompt, json_mode=True, temperature=0.85)
+        resp = provider.generate_for(
+            self.operator_type.value, prompt, json_mode=True, temperature=0.85
+        )
         data = resp.extract_json() or {}
 
         ideas: List[Idea] = []
@@ -72,6 +76,12 @@ class IndependentBranchingOperator(BaseOperator):
             )
             ideas.append(idea)
 
+        for generated in ideas:
+            generated.provenance.update(
+                producer_component="howlcreate",
+                execution=resp.metadata.get("execution"),
+                transformations=[self.operator_type.value],
+            )
         return OperatorResult(
             operator_type=OperatorType.INDEPENDENT_BRANCHING,
             ideas=ideas,

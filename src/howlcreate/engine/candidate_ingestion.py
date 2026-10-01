@@ -1,180 +1,185 @@
-"""Candidate ingestion and deliberate sandbox development for HowlDream integration."""
+"""Validated, advisory candidate scaffolding and model-backed development."""
 
-from __future__ import annotations
-
+import json
+import warnings
+from copy import deepcopy
 from datetime import datetime, timezone
+from importlib.resources import files
 from typing import Any, Dict
+from uuid import uuid4
 
-from howlcreate.models.idea import (
-    ConceptStatus,
-    EpistemicStatus,
-    Idea,
-    LineageGraph,
-)
-
-
-class IngestionError(Exception):
-    """Raised when candidate ingestion or authority validation fails."""
-    pass
+from jsonschema import Draft202012Validator
+from jsonschema.exceptions import ValidationError
+from howl_provider_core import CallBudget, ProviderError
+from howlcreate.models.idea import EpistemicStatus, Idea
+from howlcreate.providers.runtime import TrackedProvider
 
 
-def develop_candidate(
-    candidate: Dict[str, Any],
-    assessment: Dict[str, Any],
-) -> Dict[str, Any]:
-    """Ingest a HowlFrame-promoted candidate and produce a deliberate sandbox development plan.
+class IngestionError(ValueError):
+    """A malformed, mismatched or unauthorized artifact was rejected."""
 
-    HowlCreate treats this as speculative exploration, not ground truth.
-    It develops proposals in a sandbox; it does NOT deploy or mutate production.
-    """
-    # 1. Authority validation: fail closed on any execution attempt
-    auth = candidate.get("authority", {})
-    if auth.get("executable") is True or auth.get("type") != "ADVISORY":
+
+def validate_envelope(value: dict, name: str):
+    schema = json.loads(files("howlcreate").joinpath("schemas", name + ".schema.json").read_text())
+    try:
+        Draft202012Validator(schema).validate(value)
+    except ValidationError as error:
         raise IngestionError(
-            "Authority escalation prohibited: speculative candidate cannot claim execution authority"
-        )
+            f"Invalid {name} artifact; check schema and advisory authority"
+        ) from error
 
-    assess_auth = assessment.get("authority", {})
-    if assess_auth.get("executable") is True or assess_auth.get("type") != "ADVISORY":
-        raise IngestionError(
-            "Authority escalation prohibited: assessment cannot claim execution authority"
-        )
 
-    # 2. Gate validation: must be ACCEPT_FOR_DEVELOPMENT
-    disposition = assessment.get("disposition")
-    if disposition != "ACCEPT_FOR_DEVELOPMENT":
-        raise IngestionError(
-            f"Candidate cannot be developed: disposition is {disposition!r}, "
-            "must be 'ACCEPT_FOR_DEVELOPMENT'"
-        )
+def _inputs(candidate, assessment):
+    for value in (candidate, assessment):
+        if not isinstance(value, dict) or not isinstance(value.get("authority"), dict):
+            raise IngestionError("Missing typed advisory authority; legacy handoffs require export")
+        if value["authority"] != {"type": "ADVISORY", "executable": False}:
+            raise IngestionError("Authority escalation prohibited: advisory authority required")
+    validate_envelope(candidate, "howl.candidate.v1")
+    validate_envelope(assessment, "howl.assessment.v1")
+    if candidate["candidate_id"] != assessment["candidate_id"]:
+        raise IngestionError("Assessment candidate_id does not match candidate")
+    if assessment["disposition"] != "ACCEPT_FOR_DEVELOPMENT":
+        raise IngestionError("Disposition must be 'ACCEPT_FOR_DEVELOPMENT'")
+    return deepcopy(candidate), deepcopy(assessment)
 
-    candidate_id = candidate.get("candidate_id", "unknown_candidate")
-    objective = candidate.get("objective", "")
-    text = candidate.get("text", "")
-    assumptions = candidate.get("assumptions", [])
-    constraints = candidate.get("verified_constraints", [])
-    parent_req = candidate.get("parent_request_id", "")
 
-    # 3. Create Idea model with strict epistemic tagging
-    clean_id = candidate_id.replace("/", "-")
-    idea_id = f"create-{clean_id}"
-    title = f"Sandbox Prototype for {clean_id}"
-
+def scaffold_candidate(candidate: Dict[str, Any], assessment: Dict[str, Any]) -> Dict[str, Any]:
+    candidate, assessment = _inputs(candidate, assessment)
+    identifier = candidate["candidate_id"]
+    child_id = f"create-{uuid4().hex}"
+    origin = candidate.get("provenance", {}).get("producer_component") or "unknown"
+    assessor = assessment.get("provenance", {}).get("producer_component") or "unknown"
     idea = Idea(
-        id=idea_id,
-        title=title,
-        description=text,
-        problem_framing=objective,
-        core_mechanism=f"Exploratory mechanism based on candidate {candidate_id}",
-        operator_used="deliberate_sandbox_development",
-        parent_ids=[candidate_id],
-        origin="howldream",
-        epistemic_status=EpistemicStatus.IMAGINED_POSSIBILITY,
-        assumptions=list(assumptions),
-        constraints=list(constraints),
-        speculations=[
-            "Exploration hypothesis requires controlled sandbox validation before any production consideration."
-        ],
-        evidence_needs=[
-            f"Independent verification of assumptions: {', '.join(assumptions) if assumptions else 'None declared'}"
-        ],
-        unanswered_questions=[
-            "What are the precise latency and failure boundaries in staging?"
-        ],
-        status=ConceptStatus.CANDIDATE,
-    )
-
-    # 4. Record Lineage in LineageGraph
-    graph = LineageGraph()
-    parent_idea = Idea(
-        id=candidate_id,
-        title=f"DREAM Candidate ({candidate_id})",
-        description=text,
-        origin="howldream",
-        epistemic_status=EpistemicStatus.IMAGINED_POSSIBILITY,
-        operator_used="howldream_exploration",
-    )
-    graph.add_idea(parent_idea)
-    graph.add_idea(idea)
-    graph.add_edge(
-        candidate_id,
-        idea_id,
-        operator="deliberate_sandbox_development",
-        rationale="Candidate accepted by HowlFrame evaluation for deliberate sandbox development",
-    )
-
-    # 5. Formulate Deliberate Sandbox Plan (Design, Test Spec, Architecture Proposal)
-    prototype_design = {
-        "prototype_id": f"proto-{idea_id}",
-        "target_sandbox_environment": "isolated_local_testbed",
-        "implementation_steps": [
-            "1. Instantiate mock service harness simulating intermittent deployment failures.",
-            "2. Implement diagnostic hook matching candidate exploration proposal.",
-            "3. Execute fault-injection sweep without remote egress or infrastructure mutation.",
-        ],
-        "isolation_controls": [
-            "NO_PRODUCTION_DEPLOYMENT",
-            "NO_IMPLICIT_NETWORK_EGRESS",
-            "READ_ONLY_ACCESS_ONLY",
-        ],
-    }
-
-    test_specification = [
-        {
-            "test_id": "test_sandbox_diagnostic_activation",
-            "assertion": "Diagnostic captures failure metrics under simulated timeout",
-            "expected_outcome": "PASS",
+        id=child_id,
+        title=f"Scaffold for {identifier}",
+        description=candidate["text"],
+        problem_framing=candidate["objective"],
+        parent_ids=[identifier],
+        origin=origin,
+        provenance={
+            "producer_component": "howlcreate",
+            "source_candidate": candidate,
+            "source_assessment": assessment,
+            "transformations": ["candidate_scaffold"],
         },
-        {
-            "test_id": "test_sandbox_zero_side_effects",
-            "assertion": "Diagnostic produces zero non-reproducible state mutations",
-            "expected_outcome": "PASS",
-        },
-    ]
-
-    architecture_proposal = (
-        f"# Deliberate Sandbox Architecture Proposal for {idea_id}\n\n"
-        f"**Origin**: HowlDream Speculative Exploration ({candidate_id})\n"
-        f"**Evaluation**: HowlFrame ACCEPT_FOR_DEVELOPMENT ({assessment.get('assessment_id')})\n"
-        f"**Epistemic Status**: IMAGINED_POSSIBILITY (Exploratory Prototype Only)\n\n"
-        f"## Objective\n{objective}\n\n"
-        f"## Proposed Mechanism\n{text}\n\n"
-        f"## Verified Constraints\n"
-        + "".join(f"- {c}\n" for c in constraints)
-        + f"\n## Unresolved Assumptions\n"
-        + "".join(f"- {a}\n" for a in assumptions)
-        + "\n## Authority Boundary\n"
-        "This proposal represents deliberate design in sandbox isolation. "
-        "It carries NO EXECUTION OR DEPLOYMENT AUTHORITY in HowlPlane or HowlChangeOps."
+        operator_used="candidate_scaffold",
+        assumptions=candidate.get("assumptions", []),
+        constraints=candidate.get("verified_constraints", []),
+        evidence_needs=candidate.get("unresolved_issues", []),
+        epistemic_status=EpistemicStatus.IMAGINED_POSSIBILITY,
     )
-
-    now_str = datetime.now(timezone.utc).isoformat()
-    return {
+    result = {
         "schema_version": "howl.development_result/v1",
-        "development_id": f"dev-{clean_id}",
-        "source_candidate_id": candidate_id,
-        "parent_request_id": parent_req,
-        "origin": "howldream",
-        "epistemic_status": EpistemicStatus.IMAGINED_POSSIBILITY.value,
-        "authority": {
-            "type": "ADVISORY",
-            "executable": False,
-        },
+        "development_id": f"dev-{uuid4().hex}",
+        "source_candidate_id": identifier,
+        "parent_request_id": candidate["parent_request_id"],
+        "origin": origin,
+        "epistemic_status": "IMAGINED_POSSIBILITY",
+        "authority": {"type": "ADVISORY", "executable": False},
         "execution_authority": "NONE",
         "idea": idea.to_dict(),
         "lineage": {
-            "parent_id": candidate_id,
-            "child_id": idea_id,
-            "ancestors": graph.get_ancestors(idea_id),
+            "parent_id": identifier,
+            "child_id": child_id,
+            "ancestors": [identifier],
+            "source_lineage": candidate.get("provenance", {}).get("parent_ids", []),
         },
-        "sandbox_prototype_design": prototype_design,
-        "test_specification": test_specification,
-        "architecture_proposal": architecture_proposal,
+        "sandbox_prototype_design": {
+            "target_sandbox_environment": "isolated_local_testbed (no inference or execution)",
+            "implementation_steps": [
+                f"Design a bounded prototype for: {candidate['text']}",
+                "Validate declared assumptions before implementation",
+            ],
+            "isolation_controls": ["NO_PRODUCTION_DEPLOYMENT", "NO_IMPLICIT_NETWORK_EGRESS"],
+        },
+        "test_specification": [
+            {
+                "test_id": f"proposed-assumption-{i}",
+                "assertion": assumption,
+                "status": "PROPOSED_NOT_EXECUTED",
+            }
+            for i, assumption in enumerate(candidate.get("assumptions", []))
+        ],
+        "architecture_proposal": (
+            f"# Candidate scaffold\n\nObjective: {candidate['objective']}\n\n"
+            f"Proposal: {candidate['text']}\n\n"
+            f"Assessment supplied by: {assessor}; identity is descriptive, not authenticated.\n\n"
+            "NO EXECUTION OR DEPLOYMENT AUTHORITY. No model call or prototype execution occurred."
+        ),
         "provenance": {
-            "candidate_id": candidate_id,
-            "assessment_id": assessment.get("assessment_id"),
-            "parent_request_id": parent_req,
-            "developed_at": now_str,
-            "system": "howlcreate",
+            "producer_component": "howlcreate",
+            "observation_kind": "DETERMINISTIC",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "transformations": ["candidate_scaffold"],
+            "development_method": "SCAFFOLD",
+            "source_candidate": candidate,
+            "source_assessment": assessment,
+            "execution": {"deterministic": True, "mocked": False, "inference_occurred": False},
         },
     }
+    validate_envelope(result, "howl.development_result.v1")
+    return result
+
+
+def develop_candidate(candidate, assessment, provider=None, *, max_calls=32):
+    """Legacy two-argument usage is a deprecated scaffold, never model-backed development."""
+    if provider is None:
+        warnings.warn(
+            "develop_candidate without provider is deprecated; use scaffold_candidate",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return scaffold_candidate(candidate, assessment)
+    result = scaffold_candidate(candidate, assessment)
+    tracked = TrackedProvider(
+        provider,
+        CallBudget(max_calls),
+        getattr(provider, "requested_provider", type(provider).__name__),
+    )
+    prompt = (
+        "Develop this supplied candidate into a candidate-specific advisory design and proposed "
+        "tests. Preserve uncertainty; source assertions are not verified by your output. "
+        "Return JSON with sandbox_prototype_design (object), test_specification (array of objects), "
+        "and architecture_proposal (string). Do not execute tools, code or tests.\n"
+        + json.dumps({"candidate": candidate, "assessment": assessment})
+    )
+    response = tracked.generate_for("candidate_development", prompt, json_mode=True)
+    execution = response.metadata["execution"]
+    if execution.get("deterministic") or execution.get("mocked"):
+        raise IngestionError(
+            "Model-backed develop requires a model provider; use scaffold for fixtures"
+        )
+    data = response.extract_json()
+    if not isinstance(data, dict) or not isinstance(data.get("sandbox_prototype_design"), dict):
+        raise ProviderError("Malformed candidate development design")
+    if (
+        not isinstance(data.get("test_specification"), list)
+        or not all(isinstance(item, dict) for item in data["test_specification"])
+        or not isinstance(data.get("architecture_proposal"), str)
+    ):
+        raise ProviderError("Malformed proposed tests or architecture")
+    result.update(
+        {
+            key: data[key]
+            for key in ("sandbox_prototype_design", "test_specification", "architecture_proposal")
+        }
+    )
+    result["sandbox_prototype_design"]["isolation_controls"] = [
+        "NO_EXECUTION",
+        "NO_PRODUCTION_DEPLOYMENT",
+        "NO_IMPLICIT_NETWORK_EGRESS",
+    ]
+    for test in result["test_specification"]:
+        test["status"] = "PROPOSED_NOT_EXECUTED"
+        test.pop("actual_outcome", None)
+    result["architecture_proposal"] += "\n\nNO EXECUTION OR DEPLOYMENT AUTHORITY."
+    result["provenance"].update(
+        development_method="MODEL_BACKED",
+        observation_kind="EXTERNALLY_OBSERVED",
+        transformations=["candidate_development"],
+        execution=execution,
+        call_count=tracked.budget.calls,
+    )
+    validate_envelope(result, "howl.development_result.v1")
+    return result

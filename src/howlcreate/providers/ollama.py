@@ -9,6 +9,7 @@ import urllib.error
 import urllib.request
 from typing import Any, Dict, Optional
 from howlcreate.providers.base import BaseProvider, ProviderResponse
+from howl_provider_core import Policy, ProviderError, guarded_opener
 
 
 class OllamaProvider(BaseProvider):
@@ -25,10 +26,13 @@ class OllamaProvider(BaseProvider):
         self.timeout = timeout
 
     def is_available(self) -> bool:
+        policy = Policy(allow_local=getattr(self, "allow_local", False))
+        policy.check_provider("ollama")
+        policy.check_url(self.host)
         """Check if the Ollama endpoint is reachable."""
         try:
             req = urllib.request.Request(f"{self.host}/api/tags", method="GET")
-            with urllib.request.urlopen(req, timeout=3) as resp:
+            with guarded_opener(policy).open(req, timeout=3) as resp:
                 return resp.status == 200
         except Exception:
             return False
@@ -40,6 +44,9 @@ class OllamaProvider(BaseProvider):
         temperature: float = 0.7,
         json_mode: bool = False,
     ) -> ProviderResponse:
+        policy = Policy(allow_local=getattr(self, "allow_local", False))
+        policy.check_provider("ollama")
+        policy.check_url(self.host)
         start_time = time.time()
         url = f"{self.host}/api/chat"
 
@@ -69,8 +76,11 @@ class OllamaProvider(BaseProvider):
         )
 
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
+            with guarded_opener(policy).open(req, timeout=self.timeout) as resp:
+                body = resp.read(2_000_001)
+                if len(body) > 2_000_000:
+                    raise ProviderError("provider response exceeds 2 MB")
+                data = json.loads(body.decode("utf-8"))
 
             content = data.get("message", {}).get("content", "")
             prompt_eval_count = data.get("prompt_eval_count", 0)
@@ -90,10 +100,5 @@ class OllamaProvider(BaseProvider):
                 resp_obj.structured_data = parsed
             return resp_obj
 
-        except urllib.error.URLError as e:
-            raise RuntimeError(
-                f"Failed to connect to Ollama at {self.host}: {e}. "
-                "Ensure ollama is running or use --provider deterministic."
-            ) from e
-        except Exception as e:
-            raise RuntimeError(f"Ollama generation failed: {e}") from e
+        except Exception as error:
+            raise ProviderError("Ollama provider failed; check explicit configuration") from error

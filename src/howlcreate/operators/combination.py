@@ -33,7 +33,7 @@ class ForcedCombinationOperator(BaseOperator):
 
         prompt = (
             f"You are the Forced Combination Operator in HowlCreate.\n\n"
-            f"Core Problem: \"{problem}\"\n\n"
+            f'Core Problem: "{problem}"\n\n'
             f"Idea A:\n"
             f"- Title: {idea_a.title}\n"
             f"- Mechanism: {idea_a.core_mechanism or idea_a.description}\n\n"
@@ -45,19 +45,21 @@ class ForcedCombinationOperator(BaseOperator):
             f"Return valid JSON:\n"
             f"{{\n"
             f'  "ideas": [\n'
-            f'    {{\n'
+            f"    {{\n"
             f'      "title": "Emergent Hybrid Title",\n'
             f'      "description": "Integrated concept description",\n'
             f'      "core_mechanism": "How the two components reinforce each other",\n'
             f'      "emergent_advantage": "What becomes possible only with this combination",\n'
             f'      "speculations": ["Speculative properties"],\n'
             f'      "evidence_needs": ["Empirical verification needed"]\n'
-            f'    }}\n'
-            f'  ]\n'
+            f"    }}\n"
+            f"  ]\n"
             f"}}\n"
         )
 
-        resp = provider.generate(prompt, json_mode=True, temperature=0.75)
+        resp = provider.generate_for(
+            self.operator_type.value, prompt, json_mode=True, temperature=0.75
+        )
         data = resp.extract_json() or {}
 
         ideas: List[Idea] = []
@@ -80,6 +82,12 @@ class ForcedCombinationOperator(BaseOperator):
             )
             ideas.append(idea)
 
+        for generated in ideas:
+            generated.provenance.update(
+                producer_component="howlcreate",
+                execution=resp.metadata.get("execution"),
+                transformations=[self.operator_type.value],
+            )
         return OperatorResult(
             operator_type=OperatorType.FORCED_COMBINATION,
             ideas=ideas,

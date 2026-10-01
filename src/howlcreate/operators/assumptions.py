@@ -24,8 +24,8 @@ class AssumptionOperator(BaseOperator):
         parameters: Optional[Dict[str, Any]] = None,
     ) -> OperatorResult:
         prompt = (
-            f"You are the Assumption Extraction & Inversion Operator in the Howl ecosystem.\n\n"
-            f"Problem Statement: \"{problem}\"\n\n"
+            f"You are the Assumption Extraction & Inversion Operator for the supplied user problem.\n\n"
+            f'Problem Statement: "{problem}"\n\n'
             f"Your task:\n"
             f"1. Identify 3 to 5 core explicit and implicit assumptions people naturally take for granted when considering this problem.\n"
             f"2. For each assumption, provide 1-2 radical inversions: what happens if the assumption is false, reversed, removed, or exaggerated?\n"
@@ -33,34 +33,34 @@ class AssumptionOperator(BaseOperator):
             f"Return ONLY valid JSON matching this schema:\n"
             f"{{\n"
             f'  "assumptions": [\n'
-            f'    {{\n'
+            f"    {{\n"
             f'      "statement": "Explicit or implicit assumption",\n'
             f'      "is_implicit": true,\n'
             f'      "vulnerability": "Why this assumption is brittle or limits the search",\n'
             f'      "inversions": ["Inverted premise 1", "Inverted premise 2"]\n'
-            f'    }}\n'
-            f'  ],\n'
+            f"    }}\n"
+            f"  ],\n"
             f'  "ideas": [\n'
-            f'    {{\n'
+            f"    {{\n"
             f'      "title": "Concept Name",\n'
             f'      "description": "Concept description",\n'
             f'      "core_mechanism": "How it works when the assumption is inverted",\n'
             f'      "changed_assumptions": ["Assumed X -> instead Y"],\n'
             f'      "speculations": ["What is speculative here"],\n'
             f'      "evidence_needs": ["What empirical test would verify this"]\n'
-            f'    }}\n'
-            f'  ]\n'
+            f"    }}\n"
+            f"  ]\n"
             f"}}\n"
         )
 
-        resp = provider.generate(prompt, json_mode=True)
+        resp = provider.generate_for(self.operator_type.value, prompt, json_mode=True)
         data = resp.extract_json() or {}
 
         raw_assumptions = data.get("assumptions", [])
         assumption_items: List[AssumptionItem] = []
         for i, raw in enumerate(raw_assumptions):
             a_id = f"asm-{uuid.uuid4().hex[:6]}"
-            stmt = raw.get("statement", f"Assumption {i+1}")
+            stmt = raw.get("statement", f"Assumption {i + 1}")
             invs = raw.get("inversions", [])
             vuln = raw.get("vulnerability", "")
             implicit = raw.get("is_implicit", True)
@@ -102,6 +102,12 @@ class AssumptionOperator(BaseOperator):
             )
             ideas.append(idea)
 
+        for generated in ideas:
+            generated.provenance.update(
+                producer_component="howlcreate",
+                execution=resp.metadata.get("execution"),
+                transformations=[self.operator_type.value],
+            )
         return OperatorResult(
             operator_type=OperatorType.ASSUMPTION_EXTRACTION,
             ideas=ideas,
