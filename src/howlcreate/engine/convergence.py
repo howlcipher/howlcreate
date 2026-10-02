@@ -47,6 +47,7 @@ class ConvergenceEngine:
     ):
         self.deduplicator = deduplicator or ConceptDeduplicator()
         self.top_n = top_n
+        self.dimension_leaders = {}
         self.hard_constraints = list(hard_constraints) if hard_constraints else []
         if not 0 <= ecosystem_fit_weight <= 1:
             raise ValueError("ecosystem_fit_weight must be between zero and one")
@@ -283,6 +284,8 @@ class ConvergenceEngine:
         allow_partial: bool = False,
     ) -> Tuple[List[Idea], Dict[str, ConvergenceDecision]]:
         """Evaluate all ideas, gate by hard constraints, cluster by similarity, and select diverse finalists."""
+        self.dimension_leaders = {}
+        self.last_failures = []
         if not ideas:
             return [], {}
 
@@ -412,6 +415,30 @@ class ConvergenceEngine:
                 )
             return [], decisions
 
+        # Preserve dimension leaders even if balanced convergence chooses others.
+        def dimension_score(idea, dimension):
+            return idea.evaluations[-1].scores[dimension].score
+
+        self.dimension_leaders = {
+            name: {
+                "candidate_id": max(eligible_ideas, key=lambda i: dimension_score(i, dim)).id,
+                "dimension": dim,
+                "rationale": "Highest declared evaluator score among hard-constraint-eligible candidates",
+                "authority": "ADVISORY",
+            }
+            for name, dim in (
+                ("highest_feasibility", "feasibility"),
+                ("highest_novelty", "novelty"),
+                ("highest_objective_fit", "strategic_fit"),
+                ("highest_usefulness", "usefulness"),
+            )
+        }
+        self.dimension_leaders["balanced"] = {
+            "candidate_id": max(eligible_ideas, key=lambda i: i.composite_score()).id,
+            "rationale": "Highest weighted balance; scores are model judgments, not empirical validation",
+            "authority": "ADVISORY",
+        }
+
         # 3. Cluster eligible ideas to avoid duplicate finalists
         clusters, _outliers = self.deduplicator.cluster_ideas(eligible_ideas)
 
@@ -500,7 +527,7 @@ class ConvergenceEngine:
                     rationale=(
                         f"Selected as top finalist (composite score: {score:.2f}). "
                         f"Demonstrated distinct strategic mechanism in {idea.cluster_id or 'unique cluster'} "
-                        f"with superior balance of novelty and feasibility, satisfying all hard constraints."
+                        f"under advisory weighted scoring; no violation detected by the declared constraint checks."
                     ),
                     strengths_emphasized=strengths,
                     risks_noted=risks,

@@ -26,3 +26,11 @@ Runtime dependencies now include pinned howl-provider-core and jsonschema.
 - Resume retains prior valid finalists and decisions when recovery stops before new convergence.
 
 - Pin provider-core nested CLI response-shape telemetry fix.
+
+## Discovery integration and budget integrity
+
+- Accept direct typed Dream candidates for advisory selection, preserving source identity,
+  claims, constraints, uncertainty and provenance.
+- Reserve synthesis and evaluated convergence including bounded repairs; publish reduced
+  plans, deferred evaluation IDs and insufficient-budget failures.
+- Retain eligible dimension leaders beside balanced finalists and existing hard gates.

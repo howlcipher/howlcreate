@@ -25,6 +25,13 @@ def format_markdown_report(record: RunRecord) -> str:
         f"**Status**: {record.metadata.get('status', 'unknown')} "
         f"{record.metadata.get('stop_reason', '')}\n"
     )
+    if record.metadata.get("budget_plan"):
+        lines.append(f"**Budget plan**: {record.metadata['budget_plan']}\n")
+    if record.metadata.get("advisory_dimension_leaders"):
+        lines.append(
+            f"**Advisory dimension leaders**: {record.metadata['advisory_dimension_leaders']}\n"
+        )
+    lines.append("Scores describe evaluator judgments; no empirical validation is established.\n")
     lines.append("---\n")
 
     # 1. Problem & Assumptions
