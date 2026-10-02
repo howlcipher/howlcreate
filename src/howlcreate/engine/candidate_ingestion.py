@@ -24,8 +24,15 @@ def validate_envelope(value: dict, name: str):
     try:
         Draft202012Validator(schema).validate(value)
     except ValidationError as error:
+        where = "/".join(str(part) for part in error.absolute_path) or "(root)"
+        detail = error.validator
+        if error.validator in {"maxLength", "minLength"} and isinstance(error.instance, str):
+            size = len(error.instance)
+            detail = f"{error.validator} {error.validator_value}, got {size} characters"
+        elif error.validator in {"maxItems", "minItems"} and isinstance(error.instance, list):
+            detail = f"{error.validator} {error.validator_value}, got {len(error.instance)} items"
         raise IngestionError(
-            f"Invalid {name} artifact; check schema and advisory authority"
+            f"Invalid {name} artifact at {where} ({detail}); check schema and advisory authority"
         ) from error
 
 
@@ -127,7 +134,7 @@ def scaffold_candidate(candidate: Dict[str, Any], assessment: Dict[str, Any]) ->
     return result
 
 
-def develop_candidate(candidate, assessment, provider=None, *, max_calls=32):
+def develop_candidate(candidate, assessment, provider=None, *, max_calls=32, writer_copy=None):
     """Legacy two-argument usage is a deprecated scaffold, never model-backed development."""
     if provider is None:
         warnings.warn(
@@ -142,12 +149,31 @@ def develop_candidate(candidate, assessment, provider=None, *, max_calls=32):
         CallBudget(max_calls),
         getattr(provider, "requested_provider", type(provider).__name__),
     )
+    payload = {"candidate": candidate, "assessment": assessment}
+    page_instruction = ""
+    if writer_copy is not None:
+        payload["writer_copy"] = [
+            {
+                "item_id": p["item_id"],
+                "role": p["desired_copy_role"],
+                "text": p["materialized_text"],
+            }
+            for p in writer_copy["proposals"]
+        ]
+        page_instruction = (
+            " sandbox_prototype_design must include page: {title (string), sections: [{id "
+            "(lowercase slug), heading (string), layout (one of hero, cards, list, text), "
+            "items (array of writer_copy item_id strings)}]}, ordering the supplied copy into an "
+            "information hierarchy. Reference only supplied item_ids and never write new copy;"
+            " the copy text is fixed."
+        )
     prompt = (
         "Develop this supplied candidate into a candidate-specific advisory design and proposed "
         "tests. Preserve uncertainty; source assertions are not verified by your output. "
         "Return JSON with sandbox_prototype_design (object), test_specification (array of objects), "
-        "and architecture_proposal (string). Do not execute tools, code or tests.\n"
-        + json.dumps({"candidate": candidate, "assessment": assessment})
+        "and architecture_proposal (string). Do not execute tools, code or tests."
+        + page_instruction + "\n"
+        + json.dumps(payload)
     )
     response = tracked.generate_for("candidate_development", prompt, json_mode=True)
     execution = response.metadata["execution"]

@@ -260,6 +260,24 @@ def cmd_develop(args: argparse.Namespace) -> int:
     )
 
     try:
+        if getattr(args, "from_writer", None):
+            from howlcreate.engine.writer_intake import develop_from_writer
+
+            if args.candidate_file or args.assessment:
+                raise IngestionError("--from-writer takes an optional --from-dream source only")
+            if args.command == "develop" and args.provider in {"auto", "deterministic"}:
+                raise IngestionError("develop requires an explicit model provider; use scaffold")
+            dream = (
+                json.loads(args.from_dream.read_text(encoding="utf-8")) if args.from_dream else None
+            )
+            dev_res = develop_from_writer(
+                json.loads(Path(args.from_writer).read_text(encoding="utf-8")),
+                dream,
+                _provider(args) if args.command == "develop" else None,
+                max_calls=args.max_calls,
+                scaffold=args.command == "scaffold",
+            )
+            return _emit_development(dev_res, args)
         if bool(args.candidate_file) == bool(args.from_dream):
             raise IngestionError("Supply a candidate file or --from-dream")
         candidate_path = args.from_dream or Path(args.candidate_file)
@@ -293,12 +311,40 @@ def cmd_develop(args: argparse.Namespace) -> int:
         print(f"Ingestion rejected: {error}", file=sys.stderr)
         return 2
 
+    return _emit_development(dev_res, args)
+
+
+def _emit_development(dev_res: dict, args: argparse.Namespace) -> int:
     out_text = json.dumps(dev_res, indent=2)
     if args.output:
         Path(args.output).write_text(out_text, encoding="utf-8")
         print(f"[Saved] Development plan written to: {args.output}")
     else:
         print(out_text)
+    return 0
+
+
+def cmd_materialize(args: argparse.Namespace) -> int:
+    """Render a developed creative package into an explicit sandbox directory."""
+    from howlcreate.engine.candidate_ingestion import IngestionError
+    from howlcreate.engine.materialize import MANIFEST_NAME, materialize
+    from howlcreate.engine.sandbox import SandboxError
+
+    try:
+        development = json.loads(Path(args.input).read_text(encoding="utf-8"))
+        manifest = materialize(
+            development, args.output_dir, allow_repo=args.allow_repo, replace=args.replace
+        )
+    except SandboxError as error:
+        print(f"Materialization denied: {error}", file=sys.stderr)
+        return 3
+    except (IngestionError, OSError, ValueError) as error:
+        print(f"Materialization rejected: {error}", file=sys.stderr)
+        return 2
+    print(
+        f"[Materialized] {len(manifest['artifacts'])} artifacts into {manifest['output_dir']} "
+        f"({manifest['materialization_id']}); manifest: {MANIFEST_NAME}"
+    )
     return 0
 
 
@@ -409,10 +455,28 @@ def build_parser() -> argparse.ArgumentParser:
         sub = subparsers.add_parser(name, help="Candidate-specific advisory " + name)
         sub.add_argument("candidate_file", nargs="?")
         sub.add_argument("--from-dream", type=Path)
+        sub.add_argument(
+            "--from-writer",
+            type=Path,
+            help="howlwriter.copy_package/v1 from `howlwriter native write`",
+        )
         sub.add_argument("--assessment", "-a")
         sub.add_argument("--output", "-o")
         sub.add_argument("--provider", default="auto")
         sub.set_defaults(func=cmd_develop)
+    mat = subparsers.add_parser(
+        "materialize", help="Render a developed creative package into an explicit sandbox"
+    )
+    mat.add_argument("--input", required=True, help="development_result JSON with writer_copy")
+    mat.add_argument("--output-dir", required=True, help="Explicit sandbox directory")
+    mat.add_argument(
+        "--allow-repo",
+        action="store_true",
+        help="Permit a sandbox inside a git work tree (denied by default)",
+    )
+    mat.add_argument("--replace", action="store_true", help="Allow a non-empty output directory")
+    mat.set_defaults(func=cmd_materialize)
+
     for sub in set(subparsers.choices.values()):
         if any(action.dest == "provider" for action in sub._actions):
             sub.add_argument(
