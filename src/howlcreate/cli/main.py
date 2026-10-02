@@ -59,13 +59,12 @@ def _print_step(phase: str, payload: dict) -> None:
 def cmd_explore(args: argparse.Namespace) -> int:
     """Execute the full divergent & convergent creative exploration pipeline."""
     hard_constraints = (
-        getattr(args, "hard_constraints", None)
-        or getattr(args, "hard_constraint", None)
-        or []
+        getattr(args, "hard_constraints", None) or getattr(args, "hard_constraint", None) or []
     )
     config = PipelineConfig(
         top_n=args.top_n,
         max_calls=args.max_calls,
+        repair_attempts=args.repair_attempts,
         ecosystem_fit_weight=args.ecosystem_fit_weight,
         provider_name=args.provider,
         hard_constraints=hard_constraints,
@@ -98,6 +97,17 @@ def cmd_explore(args: argparse.Namespace) -> int:
     else:
         print(output_text)
 
+    return 0 if record.metadata.get("status") == "COMPLETE" else 1
+
+
+def cmd_resume(args):
+    pipeline = CreativePipeline()
+    record = pipeline.resume(args.run_id, provider=_provider(args))
+    text = json.dumps(record.to_dict(), indent=2)
+    if args.output:
+        Path(args.output).write_text(text, encoding="utf-8")
+    else:
+        print(text)
     return 0 if record.metadata.get("status") == "COMPLETE" else 1
 
 
@@ -318,6 +328,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     explore_parser.set_defaults(func=cmd_explore)
 
+    explore_parser.add_argument("--repair-attempts", type=int, choices=[0, 1], default=1)
+    resume_parser = subparsers.add_parser("resume", help="Resume a compatible saved checkpoint")
+    resume_parser.add_argument("run_id", help="Run ID or checkpoint file")
+    resume_parser.add_argument("--provider", default="auto")
+    resume_parser.add_argument("--output", "-o")
+    resume_parser.set_defaults(func=cmd_resume)
+
     # assumptions
     asm_parser = subparsers.add_parser(
         "assumptions", help="Extract and invert implicit assumptions"
@@ -384,7 +401,8 @@ def build_parser() -> argparse.ArgumentParser:
                 help="Explicit trusted operator JSON profile (never discovered)",
             )
             sub.add_argument("--allow-local", action="store_true")
-            sub.add_argument("--max-calls", type=int, default=32)
+            if sub is not resume_parser:
+                sub.add_argument("--max-calls", type=int, default=32)
             sub.add_argument("--fallback", nargs="*", default=[])
 
     return parser

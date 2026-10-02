@@ -9,11 +9,20 @@ import urllib.error
 import urllib.request
 from typing import Any, Dict, Optional
 from howlcreate.providers.base import BaseProvider, ProviderResponse
-from howl_provider_core import Execution, Policy, ProviderError, guarded_opener
+from howl_provider_core import (
+    Execution,
+    Policy,
+    ProviderError,
+    guarded_opener,
+    classify_failure,
+    reported_metadata,
+)
 
 
 class OpenAICompatibleProvider(BaseProvider):
     """Provider for OpenAI, DeepSeek, vLLM, or any /v1/chat/completions endpoint."""
+
+    sampling_capabilities = {"temperature": True, "seed": False, "top_p": False}
 
     def __init__(
         self,
@@ -70,6 +79,7 @@ class OpenAICompatibleProvider(BaseProvider):
         req_body = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(url, data=req_body, headers=headers, method="POST")
 
+        execution = None
         try:
             with self.opener.open(req, timeout=self.timeout) as resp:
                 body = resp.read(2_000_001)
@@ -77,6 +87,21 @@ class OpenAICompatibleProvider(BaseProvider):
                     raise ProviderError("provider response exceeds 2 MB")
                 data = json.loads(body.decode("utf-8"))
 
+            meta = reported_metadata(body.decode("utf-8"), "openai-json")
+            execution = Execution(
+                "openai",
+                "openai",
+                "openai_compatible",
+                "http",
+                requested_model=self.model_name,
+                model=meta["model"],
+                usage=meta["usage"],
+                request_id=meta["request_id"],
+                inference_occurred=meta["inference_occurred"],
+                elapsed_seconds=time.time() - start_time,
+                raw_output_received=True,
+                parse_status="FAILED",
+            ).to_dict()
             choice = data.get("choices", [{}])[0]
             content = choice.get("message", {}).get("content", "")
             usage = data.get("usage") or {}
@@ -94,19 +119,12 @@ class OpenAICompatibleProvider(BaseProvider):
                 completion_tokens=usage.get("completion_tokens"),
                 latency_seconds=round(time.time() - start_time, 4),
             )
-            resp_obj.metadata["execution"] = Execution(
-                "openai",
-                "openai",
-                "openai_compatible",
-                "http",
-                requested_model=self.model_name,
-                model=data.get("model"),
+            execution.update(
+                parse_status="VALID",
                 deterministic=data.get("deterministic", False),
                 mocked=data.get("mocked", False),
-                inference_occurred=data.get("inference_occurred"),
-                usage=usage or None,
-                elapsed_seconds=resp_obj.latency_seconds,
-            ).to_dict()
+            )
+            resp_obj.metadata["execution"] = execution
             parsed = resp_obj.extract_json()
             if parsed:
                 resp_obj.structured_data = parsed
@@ -119,5 +137,25 @@ class OpenAICompatibleProvider(BaseProvider):
             KeyError,
             TypeError,
             IndexError,
+            AttributeError,
         ) as error:
-            raise ProviderError("HTTP provider failed; check configuration and response") from error
+            if isinstance(error, ProviderError):
+                failure = error.failure
+            elif isinstance(error, urllib.error.HTTPError):
+                failure = classify_failure(str(error.code))
+            else:
+                failure = classify_failure("malformed" if execution else "provider unavailable")
+            if execution is None:
+                execution = Execution(
+                    "openai",
+                    "openai",
+                    "openai_compatible",
+                    "http",
+                    requested_model=self.model_name,
+                    elapsed_seconds=time.time() - start_time,
+                ).to_dict()
+            raise ProviderError(
+                "HTTP provider failed; check configuration and response",
+                failure=failure,
+                execution=execution,
+            ) from None

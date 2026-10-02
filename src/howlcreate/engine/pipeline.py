@@ -40,6 +40,7 @@ class PipelineConfig:
     provider_name: str = "auto"
     ecosystem_fit_weight: float = 0.0
     max_calls: int = 32
+    repair_attempts: int = 1
     save_run: bool = True
     custom_storage_dir: Optional[Path] = None
     hard_constraints: Optional[List[str]] = None
@@ -67,207 +68,285 @@ class CreativePipeline:
             self.config.on_step_callback(phase, payload)
 
     def execute(self, problem: str, provider: Optional[BaseProvider] = None) -> RunRecord:
-        """Execute the full creative reasoning run from problem formulation to finalists."""
-        run_id = f"run-{uuid.uuid4().hex[:8]}"
-        budget = CallBudget(self.config.max_calls)
-        active_provider = TrackedProvider(
+        record = RunRecord(run_id=f"run-{uuid.uuid4().hex[:8]}", problem=problem)
+        record.config = {
+            "provider_name": self.config.provider_name,
+            "top_n": self.config.top_n,
+            "similarity_threshold": self.config.similarity_threshold,
+            "enable_all_operators": self.config.enable_all_operators,
+            "ecosystem_fit_weight": self.config.ecosystem_fit_weight,
+            "max_calls": self.config.max_calls,
+            "repair_attempts": self.config.repair_attempts,
+            "hard_constraints": self.config.hard_constraints,
+        }
+        record.metadata.update(
+            checkpoint_schema="howlcreate.checkpoint/v1",
+            completed_phases=[],
+            phase_failures=[],
+            status="RUNNING",
+        )
+        return self._continue(record, provider)
+
+    def resume(self, run_id_or_path: str, provider: Optional[BaseProvider] = None) -> RunRecord:
+        """Resume only compatible checkpoints; never discover executable provider config."""
+        record = self.storage.load_run(run_id_or_path)
+        if record.metadata.get("checkpoint_schema") != "howlcreate.checkpoint/v1":
+            raise ValueError("incompatible checkpoint schema; only checkpoint/v1 can resume")
+        import re
+
+        if not re.fullmatch(r"run-[a-f0-9]{8}", record.run_id):
+            raise ValueError("invalid checkpoint run ID")
+        if not isinstance(record.metadata.get("completed_phases"), list):
+            raise ValueError("invalid checkpoint phase state")
+        if not record.graph.validate_dag():
+            raise ValueError("invalid checkpoint graph")
+        if record.metadata.get("status") == "COMPLETE":
+            return record
+        for key, value in record.config.items():
+            if hasattr(self.config, key):
+                setattr(self.config, key, value)
+        self.convergence_engine = ConvergenceEngine(
+            deduplicator=ConceptDeduplicator(self.config.similarity_threshold),
+            top_n=self.config.top_n,
+            ecosystem_fit_weight=self.config.ecosystem_fit_weight,
+            hard_constraints=self.config.hard_constraints,
+        )
+        record.metadata.setdefault("resume_history", []).append(
+            {
+                "resumed_at": datetime.now(timezone.utc).isoformat(),
+                "prior_call_count": record.metadata.get("call_count", 0),
+            }
+        )
+        return self._continue(record, provider)
+
+    def _continue(self, record, provider):
+        budget = CallBudget(
+            self.config.max_calls,
+            calls=record.metadata.get("call_count", 0),
+            events=list(record.metadata.get("call_events", [])),
+        )
+        active = TrackedProvider(
             provider or registry.get_provider(self.config.provider_name),
             budget,
             requested=self.config.provider_name
             if provider is None
             else getattr(provider, "requested_provider", type(provider).__name__),
+            repair_attempts=self.config.repair_attempts,
         )
+        actual_identity = {
+            "provider_type": type(active.provider).__name__,
+            "requested_provider": active.requested,
+            "requested_model": active.model_name,
+        }
+        if record.config.get("provider_type") and any(
+            record.config.get(k) != v for k, v in actual_identity.items()
+        ):
+            raise ValueError("resume provider identity differs from checkpoint")
+        if hasattr(active.provider, "adapter"):
+            import hashlib
+            from dataclasses import asdict
+            import json
 
-        record = RunRecord(
-            run_id=run_id,
-            problem=problem,
-            config={
-                "provider": active_provider.model_name,
-                "provider_type": type(active_provider.provider).__name__,
-                "requested_provider": active_provider.requested,
-                "requested_model": active_provider.model_name,
-                "top_n": self.config.top_n,
-                "similarity_threshold": self.config.similarity_threshold,
-            },
-        )
+            profile = getattr(active.provider.adapter, "config", None)
+            if profile is not None:
+                signature = hashlib.sha256(
+                    json.dumps(asdict(profile), sort_keys=True).encode()
+                ).hexdigest()
+                if record.config.get("command_profile_hash", signature) != signature:
+                    raise ValueError("resume command profile differs from checkpoint")
+                record.config["command_profile_hash"] = signature
+                record.config["command_timeout_seconds"] = profile.timeout_seconds
+                record.config["command_adapter"] = profile.adapter or profile.output_format
+        record.config.update(actual_identity)
+        prior_executions = list(record.metadata.get("executions", []))
         graph = record.graph
+        completed = record.metadata["completed_phases"]
+        failures = record.metadata["phase_failures"]
+        phase = "start"
 
-        self._notify("start", {"run_id": run_id, "problem": problem})
-
-        try:
-            # -------------------------------------------------------------
-            # 1. UNDERSTAND & EXTRACT ASSUMPTIONS (Explicit & Implicit)
-            # -------------------------------------------------------------
-            self._notify("phase", {"name": "Assumption Extraction & Inversion"})
-            asm_op = AssumptionOperator()
-            asm_result = asm_op.execute(problem, active_provider)
-            record.assumptions = asm_result.assumptions
-            for idea in asm_result.ideas:
-                graph.add_idea(idea)
-
-            # -------------------------------------------------------------
-            # 2. REFRAME (Multiple Perspectives & Lenses)
-            # -------------------------------------------------------------
-            self._notify("phase", {"name": "Reframing via Stakeholder Lenses"})
-            reframe_op = ReframingOperator()
-            reframe_result = reframe_op.execute(problem, active_provider)
-            record.reframings = reframe_result.reframings
-            for idea in reframe_result.ideas:
-                graph.add_idea(idea)
-
-            # -------------------------------------------------------------
-            # 3. DIVERGE (Independent Branching to Avoid Anchoring)
-            # -------------------------------------------------------------
-            self._notify("phase", {"name": "Independent Branching (Multi-Archetype)"})
-            explorer_a = IndependentBranchingOperator(
-                branch_archetype="Structure and Failure Boundaries"
-            )
-            res_a = explorer_a.execute(
-                problem, active_provider, parameters={"focus_domain": problem}
-            )
-            for idea in res_a.ideas:
-                graph.add_idea(idea)
-
-            explorer_b = IndependentBranchingOperator(
-                branch_archetype="Stakeholder Needs and Resource Tradeoffs"
-            )
-            res_b = explorer_b.execute(
-                problem, active_provider, parameters={"focus_domain": problem}
-            )
-            for idea in res_b.ideas:
-                graph.add_idea(idea)
-
-            # -------------------------------------------------------------
-            # 4. MUTATE (Constraints, Analogies, Extremes, Substitutions)
-            # -------------------------------------------------------------
-            self._notify("phase", {"name": "Lateral Mutation & Domain Analogies"})
-            pool_snapshot = list(graph.nodes.values())
-
-            # Constraint Mutation
-            mut_op = ConstraintMutationOperator()
-            mut_res = mut_op.execute(problem, active_provider, context_ideas=pool_snapshot)
-            for idea in mut_res.ideas:
-                graph.add_idea(idea)
-
-            # Analogical Reasoning (Biology, Logistics, etc.)
-            analogy_op = AnalogicalReasoningOperator()
-            analogy_res = analogy_op.execute(problem, active_provider, context_ideas=pool_snapshot)
-            for idea in analogy_res.ideas:
-                graph.add_idea(idea)
-
-            if self.config.enable_all_operators:
-                # Extreme Solutions
-                extreme_op = ExtremeSolutionsOperator()
-                ext_res = extreme_op.execute(problem, active_provider, context_ideas=pool_snapshot)
-                for idea in ext_res.ideas:
-                    graph.add_idea(idea)
-
-                # Simplification (Problem Dissolution)
-                simp_op = SimplificationOperator()
-                simp_res = simp_op.execute(problem, active_provider, context_ideas=pool_snapshot)
-                for idea in simp_res.ideas:
-                    graph.add_idea(idea)
-
-                # Substitution
-                sub_op = SubstitutionOperator()
-                sub_res = sub_op.execute(problem, active_provider, context_ideas=pool_snapshot)
-                for idea in sub_res.ideas:
-                    graph.add_idea(idea)
-
-            # -------------------------------------------------------------
-            # 5. CROSS-POLLINATE & COMBINE (Forced Combination)
-            # -------------------------------------------------------------
-            self._notify("phase", {"name": "Forced Combinations & Cross-Pollination"})
-            current_ideas = list(graph.nodes.values())
-            if len(current_ideas) >= 2:
-                combo_op = ForcedCombinationOperator()
-                combo_res = combo_op.execute(problem, active_provider, context_ideas=current_ideas)
-                for idea in combo_res.ideas:
-                    graph.add_idea(idea)
-
-            # -------------------------------------------------------------
-            # 6. ADVERSARIAL CRITIQUE & DEFENSIVE HARDENING
-            # -------------------------------------------------------------
-            self._notify("phase", {"name": "Adversarial Critique & Brittleness Hardening"})
-            if graph.nodes:
-                adv_op = AdversarialCritiqueOperator()
-                # Attack the most prominent or first branch
-                adv_target = list(graph.nodes.values())[0]
-                adv_res = adv_op.execute(problem, active_provider, context_ideas=[adv_target])
-                for idea in adv_res.ideas:
-                    graph.add_idea(idea)
-
-            # -------------------------------------------------------------
-            # 7. SECOND-ORDER EXPLORATION
-            # -------------------------------------------------------------
-            self._notify("phase", {"name": "Second-Order Ripple Effect Exploration"})
-            sec_op = SecondOrderOperator()
-            sec_res = sec_op.execute(
-                problem, active_provider, context_ideas=list(graph.nodes.values())[:1]
-            )
-            for idea in sec_res.ideas:
-                graph.add_idea(idea)
-
-            # -------------------------------------------------------------
-            # 8. SYNTHESIS
-            # -------------------------------------------------------------
-            self._notify("phase", {"name": "Architectural Synthesis of Best Components"})
-            synth_op = SynthesisOperator()
-            synth_res = synth_op.execute(
-                problem, active_provider, context_ideas=list(graph.nodes.values())
-            )
-            for idea in synth_res.ideas:
-                graph.add_idea(idea)
-
-            # -------------------------------------------------------------
-            # 9. MULTI-DIMENSIONAL EVALUATION & CONVERGENCE
-            # -------------------------------------------------------------
-            self._notify(
-                "phase", {"name": "Multi-Dimensional Evaluation & Diversity-Preserving Convergence"}
-            )
-            all_ideas = list(graph.nodes.values())
-            if not all_ideas:
-                record.metadata["status"] = "INVALID_PROVIDER_OUTPUT"
-                record.metadata["stop_reason"] = "ZERO_CONCEPTS_GENERATED"
-            else:
-                finalists, decisions = self.convergence_engine.converge(
-                    all_ideas,
-                    problem,
-                    active_provider,
-                    hard_constraints=self.config.hard_constraints,
-                )
-                record.finalist_ids = [f.id for f in finalists]
-                record.decisions = decisions
-                if not finalists:
-                    record.metadata["status"] = "NO_VIABLE_CANDIDATES"
-                    record.metadata["stop_reason"] = "NO_VIABLE_CANDIDATES"
-                else:
-                    record.metadata["status"] = "COMPLETE"
-            record.completed_at = datetime.now(timezone.utc).isoformat()
-        except BudgetExceeded:
-            record.metadata.update(status="PARTIAL", stop_reason="BUDGET_EXHAUSTED")
-        except (ProviderError, RuntimeError, ValueError) as error:
-            record.metadata.update(
-                status="PARTIAL", stop_reason="PROVIDER_FAILURE", error_type=type(error).__name__
-            )
-        finally:
-            record.completed_at = datetime.now(timezone.utc).isoformat()
+        def checkpoint():
             record.metadata.update(
                 call_count=budget.calls,
-                executions=active_provider.executions,
                 call_events=budget.events,
+                executions=prior_executions + active.executions,
             )
             if self.config.save_run:
-                saved_path = self.storage.save_run(record)
-                record.metadata["storage_path"] = str(saved_path)
-            self._notify(
-                "complete",
-                {
-                    "run_id": run_id,
-                    "total_concepts_explored": len(graph.nodes),
-                    "finalists_selected": len(record.finalist_ids),
-                    "status": record.metadata["status"],
-                },
-            )
+                record.metadata["storage_path"] = str(self.storage.save_run(record))
 
+        steps = [
+            ("assumptions", AssumptionOperator(), "none"),
+            ("reframing", ReframingOperator(), "none"),
+            (
+                "branch_structure",
+                IndependentBranchingOperator(branch_archetype="Structure and Failure Boundaries"),
+                "none",
+            ),
+            (
+                "branch_stakeholders",
+                IndependentBranchingOperator(
+                    branch_archetype="Stakeholder Needs and Resource Tradeoffs"
+                ),
+                "none",
+            ),
+            ("mutation", ConstraintMutationOperator(), "mutation"),
+            ("analogy", AnalogicalReasoningOperator(), "mutation"),
+        ]
+        if self.config.enable_all_operators:
+            steps.extend(
+                [
+                    ("extremes", ExtremeSolutionsOperator(), "mutation"),
+                    ("simplification", SimplificationOperator(), "mutation"),
+                    ("substitution", SubstitutionOperator(), "mutation"),
+                ]
+            )
+        steps.extend(
+            [
+                ("combination", ForcedCombinationOperator(), "all"),
+                ("adversarial", AdversarialCritiqueOperator(), "first"),
+                ("second_order", SecondOrderOperator(), "first"),
+                ("synthesis", SynthesisOperator(), "all"),
+            ]
+        )
+        phase_order = [name for name, _, _ in steps] + ["convergence"]
+        if completed != phase_order[: len(completed)]:
+            raise ValueError("checkpoint completed phases are not a compatible ordered prefix")
+        if len(budget.events) != budget.calls:
+            raise ValueError("checkpoint budget history is inconsistent")
+        # Persist the original mutation context IDs, so resume does not change its seed pool.
+        record.metadata.update(status="RUNNING")
+        record.finalist_ids = []
+        record.decisions = {}
+        checkpoint()
+        can_converge = True
+        try:
+            for phase, operator, context_kind in steps:
+                if phase in completed:
+                    continue
+                self._notify("phase", {"name": phase})
+                pool = list(graph.nodes.values())
+                if context_kind == "mutation":
+                    ids = record.metadata.setdefault("mutation_seed_ids", list(graph.nodes))
+                    pool = [graph.nodes[i] for i in ids]
+                elif context_kind == "first":
+                    pool = pool[:1]
+                elif context_kind == "none":
+                    pool = []
+                try:
+                    result = operator.execute(record.problem, active, context_ideas=pool)
+                except (ProviderError, RuntimeError, ValueError) as error:
+                    failure = getattr(error, "failure", None) or {
+                        "category": "INVALID_PROVIDER_OUTPUT",
+                        "recovery": "REPAIRABLE",
+                        "sanitized_message": "phase output failed validation",
+                    }
+                    failures.append(
+                        {"phase": phase, "call_count": budget.calls, "failure": failure}
+                    )
+                    record.metadata.update(
+                        failed_phase=phase,
+                        status="PARTIAL",
+                        stop_reason="BUDGET_EXHAUSTED"
+                        if isinstance(error, BudgetExceeded)
+                        else "PROVIDER_FAILURE",
+                        error_type=type(error).__name__,
+                    )
+                    # Optional later phases can fail without erasing the valid pool. Never
+                    # dispatch more calls after budget, authentication, quota or cancellation.
+                    can_converge = (
+                        phase
+                        not in {
+                            "assumptions",
+                            "reframing",
+                            "branch_structure",
+                            "branch_stakeholders",
+                        }
+                        and failure["recovery"] == "REPAIRABLE"
+                    )
+                    checkpoint()
+                    break
+                for idea in result.ideas:
+                    graph.add_idea(idea)
+                if phase == "assumptions":
+                    record.assumptions = result.assumptions
+                if phase == "reframing":
+                    record.reframings = result.reframings
+                completed.append(phase)
+                if record.metadata.get("failed_phase") == phase:
+                    record.metadata.pop("failed_phase")
+                checkpoint()
+            phase = "convergence"
+            if graph.nodes and can_converge:
+                self._notify("phase", {"name": phase})
+                checkpoint()
+                finalists, decisions = self.convergence_engine.converge(
+                    list(graph.nodes.values()),
+                    record.problem,
+                    active,
+                    hard_constraints=self.config.hard_constraints,
+                    allow_partial=True,
+                )
+                for failure in self.convergence_engine.last_failures:
+                    failures.append({"phase": "convergence", "failure": failure})
+                    record.metadata.update(
+                        failed_phase="convergence",
+                        stop_reason=(
+                            "BUDGET_EXHAUSTED"
+                            if failure["category"] == "BUDGET_EXHAUSTED"
+                            else record.metadata.get("stop_reason", "PROVIDER_FAILURE")
+                        ),
+                    )
+                record.finalist_ids = [idea.id for idea in finalists]
+                record.decisions = decisions
+                record.metadata["status"] = (
+                    "PARTIAL" if failures else ("COMPLETE" if finalists else "NO_VIABLE_CANDIDATES")
+                )
+                if not failures and not finalists:
+                    record.metadata["stop_reason"] = "NO_VIABLE_CANDIDATES"
+                if not failures:
+                    completed.append(phase)
+            elif not graph.nodes and not failures:
+                record.metadata.update(
+                    status="INVALID_PROVIDER_OUTPUT", stop_reason="ZERO_CONCEPTS_GENERATED"
+                )
+        except (ProviderError, RuntimeError, ValueError) as error:
+            failures.append(
+                {
+                    "phase": phase,
+                    "failure": getattr(error, "failure", None)
+                    or {
+                        "category": "INVALID_PROVIDER_OUTPUT",
+                        "sanitized_message": "phase output failed validation",
+                    },
+                }
+            )
+            record.metadata.update(
+                status="PARTIAL",
+                failed_phase=phase,
+                stop_reason="BUDGET_EXHAUSTED"
+                if isinstance(error, BudgetExceeded)
+                else "PROVIDER_FAILURE",
+                error_type=type(error).__name__,
+            )
+        except BaseException:
+            record.metadata.update(status="PARTIAL", failed_phase=phase, stop_reason="INTERRUPTED")
+            raise
+        finally:
+            record.completed_at = datetime.now(timezone.utc).isoformat()
+            if failures and record.metadata["status"] == "RUNNING":
+                record.metadata["status"] = "PARTIAL"
+            record.metadata["completion_detail"] = (
+                ("PARTIAL_WITH_FINALISTS" if record.finalist_ids else "PARTIAL_NO_FINALISTS")
+                if record.metadata["status"] == "PARTIAL"
+                else record.metadata["status"]
+            )
+            checkpoint()
+        self._notify(
+            "complete",
+            {
+                "run_id": record.run_id,
+                "total_concepts_explored": len(graph.nodes),
+                "finalists_selected": len(record.finalist_ids),
+                "status": record.metadata["status"],
+            },
+        )
         return record

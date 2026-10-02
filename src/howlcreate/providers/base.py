@@ -73,14 +73,20 @@ class ProviderResponse:
 class BaseProvider(ABC):
     """Abstract interface for all model and inference backends."""
 
+    sampling_capabilities = {"temperature": False, "seed": False, "top_p": False}
+
     def __init__(self, model_name: str = "default"):
         self.model_name = model_name
 
     def generate_for(self, operation: str, prompt: str, **kwargs) -> ProviderResponse:
         """Explicit operation identity; legacy adapters need only implement generate."""
         response = self.generate(prompt, **kwargs)
-        if kwargs.get("json_mode") and response.extract_json() is None:
-            raise ProviderError("provider returned malformed structured output")
+        try:
+            if kwargs.get("json_mode") and response.extract_json() is None:
+                raise ProviderError("provider returned malformed structured output")
+        except ProviderError as error:
+            error.response = response
+            raise
         return response
 
     @abstractmethod

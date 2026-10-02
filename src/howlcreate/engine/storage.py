@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from howlcreate.models.run import RunRecord
@@ -36,8 +37,16 @@ class RunStorage:
         """Persist a RunRecord to disk."""
         target = file_path or (self.storage_dir / f"{record.run_id}.json")
         target.parent.mkdir(parents=True, exist_ok=True)
-        with open(target, "w", encoding="utf-8") as f:
-            json.dump(record.to_dict(), f, indent=2, ensure_ascii=False)
+        fd, temporary = tempfile.mkstemp(prefix=".checkpoint-", dir=target.parent)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as stream:
+                json.dump(record.to_dict(), stream, indent=2, ensure_ascii=False)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary, target)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
         return target
 
     def load_run(self, run_id_or_path: str) -> RunRecord:
@@ -65,13 +74,15 @@ class RunStorage:
             try:
                 with open(file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    results.append({
-                        "run_id": data.get("run_id", file.stem),
-                        "problem": data.get("problem", ""),
-                        "created_at": data.get("created_at", ""),
-                        "finalists_count": len(data.get("finalist_ids", [])),
-                        "file_path": str(file),
-                    })
+                    results.append(
+                        {
+                            "run_id": data.get("run_id", file.stem),
+                            "problem": data.get("problem", ""),
+                            "created_at": data.get("created_at", ""),
+                            "finalists_count": len(data.get("finalist_ids", [])),
+                            "file_path": str(file),
+                        }
+                    )
             except Exception:
                 continue
 

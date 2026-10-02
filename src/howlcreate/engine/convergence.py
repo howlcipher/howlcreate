@@ -16,6 +16,7 @@ from howlcreate.models.idea import (
 )
 from howlcreate.models.run import ConvergenceDecision
 from howlcreate.providers.base import BaseProvider
+from howl_provider_core import ProviderError
 
 
 class ConvergenceEngine:
@@ -279,6 +280,7 @@ class ConvergenceEngine:
         problem: str,
         provider: BaseProvider,
         hard_constraints: Optional[List[str]] = None,
+        allow_partial: bool = False,
     ) -> Tuple[List[Idea], Dict[str, ConvergenceDecision]]:
         """Evaluate all ideas, gate by hard constraints, cluster by similarity, and select diverse finalists."""
         if not ideas:
@@ -291,6 +293,7 @@ class ConvergenceEngine:
         # One bounded request per batch, preserving each candidate's identity.
         pending = [idea for idea in ideas if not idea.evaluations]
         errors = []
+        self.last_failures = []
         for offset in range(0, len(pending), 8):
             batch = pending[offset : offset + 8]
             payload = [
@@ -326,9 +329,16 @@ class ConvergenceEngine:
                 "Distinguish scores and state uncertainty; do not invent supporting evidence.\n"
                 "CANDIDATES_JSON:\n" + json.dumps(payload)
             )
-            response = provider.generate_for(
-                "evaluation_batch", prompt, json_mode=True, temperature=0.3
-            )
+            try:
+                response = provider.generate_for(
+                    "evaluation_batch", prompt, json_mode=True, temperature=0.3
+                )
+            except ProviderError as error:
+                if not allow_partial:
+                    raise
+                self.last_failures.append(error.failure)
+                errors.append("evaluation provider failure")
+                break
             data = response.extract_json() or {}
             evaluations = data.get("evaluations", {})
             if not isinstance(evaluations, dict):
@@ -352,8 +362,21 @@ class ConvergenceEngine:
                         )
                 except (KeyError, TypeError, ValueError):
                     errors.append("incomplete evaluation")
-        if errors:
+        if errors and not allow_partial:
             raise ValueError("incomplete batch evaluation; valid scores retained, none fabricated")
+
+        if errors:
+            # Only evaluated survivors are eligible. No missing score is replaced by zero.
+            if not self.last_failures:
+                self.last_failures.append(
+                    {
+                        "category": "INVALID_PROVIDER_OUTPUT",
+                        "sanitized_message": "partial evaluation coverage",
+                    }
+                )
+            ideas = [idea for idea in ideas if idea.evaluations]
+            if not ideas:
+                return [], {}
 
         # 2. Hard constraint evaluation: partition ideas into eligible and ineligible
         for idea in ideas:
