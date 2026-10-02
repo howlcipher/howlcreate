@@ -197,3 +197,34 @@ Direct `--from-dream` input is supported by `explore`, `develop`, and `scaffold`
 Bounded exploration reserves synthesis/evaluation capacity, publishes reduced plans,
 and retains unevaluated nodes. Advisory dimension leaders preserve creative value
 alongside balanced finalists. See [discovery budgets](docs/DISCOVERY_BUDGETS.md).
+
+## Writer intake and sandbox materialization
+
+`develop` and `scaffold` accept `--from-writer package.json`, the
+`howlwriter.copy_package/v1` emitted by `howlwriter native write`, optionally
+bound to its Dream source with `--from-dream`. The copy lands in a
+schema-validated `sandbox_prototype_design.writer_copy` slot. Proposals Writer
+did not mark `FACTUALLY_PRESERVED` are withheld, and their current copy is used
+instead. Dream, Writer and Create identities travel in `lineage`. `develop` records
+`contribution.operation: DESIGNED`, and no files are written at that step.
+
+`materialize` is the step that builds files:
+
+```bash
+howlcreate develop --from-writer package.json --from-dream candidate.json \
+  --provider command --command-config remote.json --output development.json
+howlcreate materialize --input development.json --output-dir /explicit/sandbox
+```
+
+It deterministically renders `index.html`, `styles.css`, `copy.json`, `DESIGN.md`
+and `create-artifact-manifest.json`. The manifest records each file's artifact
+ID, sha256, Create run ID, Dream and Writer source IDs, design-time
+provider/model, and `contribution.operation: MATERIALIZED`. Writes are confined
+to the named directory:
+
+- Every path component is opened relative to the root with `O_NOFOLLOW`.
+- `..`, absolute paths, symlink escapes, `.git` paths and non-static file types are denied.
+- A root inside a git work tree is refused unless `--allow-repo` is given.
+- `HOWLCREATE_SANDBOX_ROOTS` can restrict roots to an allowlist.
+
+Materialization runs no subprocess, no git and no network.

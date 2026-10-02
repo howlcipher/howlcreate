@@ -1,0 +1,177 @@
+{
+  "writer_proposal_id": "wp-a225d7b2ab08",
+  "request_id": "wreq-d477aec5dbb5",
+  "source_idea_id": "hd-20261002-000000-abcdefabcdef/candidate/3",
+  "source_run_id": "hd-20261002-000000-abcdefabcdef",
+  "source_component": "howldream",
+  "source_component_role": "GENERATED",
+  "title": "Lead a small engineering portfolio with the software it ships.",
+  "audience": "engineering hiring managers",
+  "created_at": "2026-10-02T22:02:59.487053+00:00",
+  "proposals": [
+    {
+      "proposal_item_id": "wp-a225d7b2ab08/item/1",
+      "item_id": "hero",
+      "current_text": "Build engineer for a fictional studio.",
+      "proposed_text": "Build engineer for a fictional studio.",
+      "reason": "tightened for hero headline",
+      "desired_copy_role": "hero headline",
+      "evidence_refs": [],
+      "factual_status": "FACTUALLY_PRESERVED",
+      "factual_change": false,
+      "fidelity": {
+        "status": "FACTUALLY_PRESERVED",
+        "factual_change": false,
+        "findings": [],
+        "proposal_quantities": [],
+        "omitted_quantities": []
+      },
+      "design_judgment": "lead with the artifact",
+      "uncertainty": "",
+      "origin": "MODEL",
+      "word_count": 6,
+      "max_words": null,
+      "length_ok": true
+    },
+    {
+      "proposal_item_id": "wp-a225d7b2ab08/item/2",
+      "item_id": "tool-title",
+      "current_text": "Release CLI",
+      "proposed_text": "Release CLI",
+      "reason": "tightened for card title",
+      "desired_copy_role": "card title",
+      "evidence_refs": [],
+      "factual_status": "FACTUALLY_PRESERVED",
+      "factual_change": false,
+      "fidelity": {
+        "status": "FACTUALLY_PRESERVED",
+        "factual_change": false,
+        "findings": [],
+        "proposal_quantities": [],
+        "omitted_quantities": []
+      },
+      "design_judgment": "lead with the artifact",
+      "uncertainty": "",
+      "origin": "MODEL",
+      "word_count": 2,
+      "max_words": null,
+      "length_ok": true
+    },
+    {
+      "proposal_item_id": "wp-a225d7b2ab08/item/3",
+      "item_id": "tool-body",
+      "current_text": "Dry-run validated release paths for 9 of 12 services.",
+      "proposed_text": "Validated 9 of 12 release pipelines in production.",
+      "reason": "tightened for card body",
+      "desired_copy_role": "card body",
+      "evidence_refs": [],
+      "factual_status": "FACTUAL_CONFLICT",
+      "factual_change": true,
+      "fidelity": {
+        "status": "FACTUALLY_PRESERVED",
+        "factual_change": false,
+        "findings": [],
+        "proposal_quantities": [
+          {
+            "kind": "ratio",
+            "value": "9/12",
+            "unit": "service",
+            "text": "9 of 12"
+          }
+        ],
+        "omitted_quantities": []
+      },
+      "design_judgment": "lead with the artifact",
+      "uncertainty": "",
+      "origin": "MODEL",
+      "word_count": 9,
+      "max_words": null,
+      "length_ok": true
+    },
+    {
+      "proposal_item_id": "wp-a225d7b2ab08/item/4",
+      "item_id": "scope",
+      "current_text": "Standardized 12 service repositories.",
+      "proposed_text": "Standardized 12 service repositories.",
+      "reason": "tightened for scope line",
+      "desired_copy_role": "scope line",
+      "evidence_refs": [],
+      "factual_status": "FACTUALLY_PRESERVED",
+      "factual_change": false,
+      "fidelity": {
+        "status": "FACTUALLY_PRESERVED",
+        "factual_change": false,
+        "findings": [],
+        "proposal_quantities": [
+          {
+            "kind": "count",
+            "value": "12",
+            "unit": "repository",
+            "text": "12"
+          }
+        ],
+        "omitted_quantities": []
+      },
+      "design_judgment": "lead with the artifact",
+      "uncertainty": "",
+      "origin": "MODEL",
+      "word_count": 4,
+      "max_words": null,
+      "length_ok": true
+    }
+  ],
+  "factual_status": "FACTUAL_CONFLICT",
+  "execution": {
+    "requested_provider": "command",
+    "selected_provider": "command",
+    "actual_provider": "claude",
+    "adapter": "claude-json",
+    "model": "claude-fake-model",
+    "requested_model": null,
+    "deterministic": false,
+    "mocked": false,
+    "inference_occurred": true,
+    "remote": true,
+    "remote_observation": "OPERATOR_DECLARED",
+    "fallback_reason": null,
+    "elapsed_seconds": 0.0402773050009273,
+    "usage": {
+      "input_tokens": 120,
+      "output_tokens": 45
+    },
+    "cost": 0.0123,
+    "request_id": "fake-session-0001",
+    "raw_output_received": true,
+    "parse_status": "VALID",
+    "repair_attempted": false,
+    "sampling": null,
+    "prompt_version": "howlwriter.native.prompt/v1",
+    "path": "native-bounded",
+    "agent_backend_used": false
+  },
+  "contribution": {
+    "component": "howlwriter",
+    "operation": "TRANSFORMED_COPY",
+    "inference_occurred": true,
+    "proposals_from_model": 4,
+    "proposals_unchanged": 0
+  },
+  "canonical_evidence_refs": [
+    "portfolio.json"
+  ],
+  "factual_constraints": [
+    "Do not claim production adoption."
+  ],
+  "schema_version": "howlwriter.copy_package/v1",
+  "authority": {
+    "type": "ADVISORY",
+    "executable": false
+  },
+  "lineage": {
+    "source_component": "howldream",
+    "source_idea_id": "hd-20261002-000000-abcdefabcdef/candidate/3",
+    "source_run_id": "hd-20261002-000000-abcdefabcdef",
+    "writer_request_id": "wreq-d477aec5dbb5",
+    "writer_proposal_id": "wp-a225d7b2ab08"
+  }
+}

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+Native HowlWriter consumption and sandbox materialization (Run 5 CF04, DF-C2, DF-C4, CF02):
+`develop`/`scaffold --from-writer` validate `howlwriter.copy_package/v1` into a typed
+`writer_copy` slot with Dream/Writer/Create lineage. The new `materialize` command renders a
+deterministic static prototype plus `create-artifact-manifest.json` into an explicit,
+symlink-safe sandbox that denies live repositories by default. Schema errors now name the
+field and size. Added `python -m howlcreate.cli`.
+
 Pinned the final reviewed provider core with portable command tests. CI preserves
 `HOWL_FORBID_LOCAL_INFERENCE=1` for all verification commands.
 
