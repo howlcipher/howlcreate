@@ -65,7 +65,12 @@ def scaffold_candidate(candidate: Dict[str, Any], assessment: Dict[str, Any]) ->
         },
         operator_used="candidate_scaffold",
         assumptions=candidate.get("assumptions", []),
-        constraints=candidate.get("verified_constraints", []),
+        constraints=list(
+            dict.fromkeys(
+                candidate.get("verified_constraints", [])
+                + candidate.get("provenance", {}).get("hard_constraints", [])
+            )
+        ),
         evidence_needs=candidate.get("unresolved_issues", []),
         epistemic_status=EpistemicStatus.IMAGINED_POSSIBILITY,
     )
@@ -183,3 +188,47 @@ def develop_candidate(candidate, assessment, provider=None, *, max_calls=32):
     )
     validate_envelope(result, "howl.development_result.v1")
     return result
+
+
+def validate_dream_source(candidate):
+    """Direct selection is not a forged ACCEPT assessment or factual verification."""
+    if not isinstance(candidate, dict):
+        raise IngestionError("Dream source must be a candidate envelope")
+    if candidate.get("authority") != {"type": "ADVISORY", "executable": False}:
+        raise IngestionError("Dream source requires advisory authority")
+    validate_envelope(candidate, "howl.candidate.v1")
+    if candidate.get("provenance", {}).get("producer_component") != "howldream":
+        raise IngestionError("--from-dream requires a HowlDream source")
+    constraints = candidate.get("provenance", {}).get("hard_constraints", [])
+    if (
+        not isinstance(constraints, list)
+        or len(constraints) > 50
+        or any(not isinstance(c, str) or not c.strip() or len(c) > 2000 for c in constraints)
+    ):
+        raise IngestionError("Dream hard_constraints must be a bounded list of nonempty strings")
+    if candidate.get("status") == "REJECTED" or candidate.get("contradictions"):
+        raise IngestionError("Rejected/contradicted source requires review before development")
+    return deepcopy(candidate)
+
+
+def develop_from_dream(candidate, provider=None, *, max_calls=32, scaffold=False):
+    """Explicit operator selection for advisory development, never verification credit."""
+    source = validate_dream_source(candidate)
+    assessment = {
+        "schema_version": "howl.assessment/v1",
+        "assessment_id": "operator-selection-" + uuid4().hex,
+        "candidate_id": source["candidate_id"],
+        "disposition": "ACCEPT_FOR_DEVELOPMENT",
+        "confidence": "UNKNOWN",
+        "limitations": ["Operator selected for development only; no external verification"],
+        "authority": {"type": "ADVISORY", "executable": False},
+        "provenance": {
+            "producer_component": "operator_selection",
+            "observation_kind": "DETERMINISTIC",
+        },
+    }
+    if scaffold:
+        return scaffold_candidate(source, assessment)
+    if provider is None:
+        raise IngestionError("develop requires an explicit model provider; use scaffold")
+    return develop_candidate(source, assessment, provider, max_calls=max_calls)

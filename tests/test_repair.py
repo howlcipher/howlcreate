@@ -51,10 +51,18 @@ def test_budget_preserves_partial(tmp_path, limit):
     result = CreativePipeline(PipelineConfig(max_calls=limit, custom_storage_dir=tmp_path)).execute(
         "Design a streaming parser", provider
     )
-    assert result.metadata["call_count"] == limit
-    assert len(provider.call_history) == limit
-    assert result.metadata["stop_reason"] == "BUDGET_EXHAUSTED"
-    assert result.metadata["status"] == "PARTIAL"
+    assert result.metadata["call_count"] <= limit
+    assert len(provider.call_history) == result.metadata["call_count"]
+    if limit < result.metadata["budget_plan"]["minimum_calls"]:
+        assert result.metadata["stop_reason"] == "INSUFFICIENT_BUDGET_FOR_REQUESTED_PIPELINE"
+        assert result.metadata["status"] == "PARTIAL"
+        assert not provider.call_history
+    else:
+        assert result.metadata["status"] == "COMPLETE"
+        assert result.metadata["completion_detail"] == "COMPLETE_REDUCED_PIPELINE"
+        assert result.finalist_ids
+        assert "synthesis" in result.metadata["completed_phases"]
+        assert "convergence" in result.metadata["completed_phases"]
     assert list(tmp_path.glob("*.json"))
 
 

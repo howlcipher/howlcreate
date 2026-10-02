@@ -190,3 +190,10 @@ Executions record sampling requested/supported/applied. Commands and determinist
 fixtures do not claim sampling control; HTTP applied means transmitted in the
 request, not independently verified backend behavior. Unknown usage/cost remains
 unknown. This is a recovery workflow, not evidence that partial runs equal full runs.
+
+## Dream selection and reserved convergence
+
+Direct `--from-dream` input is supported by `explore`, `develop`, and `scaffold`.
+Bounded exploration reserves synthesis/evaluation capacity, publishes reduced plans,
+and retains unevaluated nodes. Advisory dimension leaders preserve creative value
+alongside balanced finalists. See [discovery budgets](docs/DISCOVERY_BUDGETS.md).

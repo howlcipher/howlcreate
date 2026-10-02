@@ -77,7 +77,16 @@ def cmd_explore(args: argparse.Namespace) -> int:
     if args.model:
         provider.model_name = args.model
 
-    record = pipeline.execute(args.problem, provider=provider)
+    source = None
+    if args.from_dream:
+        from howlcreate.engine.candidate_ingestion import validate_dream_source
+
+        source = validate_dream_source(json.loads(args.from_dream.read_text()))
+    if not args.problem and source is None:
+        raise ValueError("explore requires a problem or --from-dream")
+    record = pipeline.execute(
+        args.problem or source["objective"], provider=provider, source_candidate=source
+    )
 
     format_type = args.format
     if not format_type:
@@ -247,32 +256,41 @@ def cmd_develop(args: argparse.Namespace) -> int:
         develop_candidate,
         scaffold_candidate,
         IngestionError,
+        develop_from_dream,
     )
 
-    cand_path = Path(args.candidate_file)
-    assess_path = Path(args.assessment)
-
-    if not cand_path.is_file():
-        print(f"Error: Candidate file '{cand_path}' not found", file=sys.stderr)
-        return 1
-    if not assess_path.is_file():
-        print(f"Error: Assessment file '{assess_path}' not found", file=sys.stderr)
-        return 1
-
-    cand_data = json.loads(cand_path.read_text(encoding="utf-8"))
-    assess_data = json.loads(assess_path.read_text(encoding="utf-8"))
-
     try:
-        if args.command == "scaffold":
-            dev_res = scaffold_candidate(cand_data, assess_data)
-        else:
-            if args.provider in {"auto", "deterministic"}:
+        if bool(args.candidate_file) == bool(args.from_dream):
+            raise IngestionError("Supply a candidate file or --from-dream")
+        candidate_path = args.from_dream or Path(args.candidate_file)
+        cand_data = json.loads(candidate_path.read_text(encoding="utf-8"))
+        if args.from_dream:
+            if args.assessment:
+                raise IngestionError("--from-dream is explicit selection; omit --assessment")
+            if args.command == "develop" and args.provider in {"auto", "deterministic"}:
                 raise IngestionError("develop requires an explicit model provider; use scaffold")
-            dev_res = develop_candidate(
-                cand_data, assess_data, _provider(args), max_calls=args.max_calls
+            dev_res = develop_from_dream(
+                cand_data,
+                _provider(args) if args.command == "develop" else None,
+                max_calls=args.max_calls,
+                scaffold=args.command == "scaffold",
             )
-    except IngestionError as e:
-        print(f"Ingestion rejected: {e}", file=sys.stderr)
+        else:
+            if not args.assessment:
+                raise IngestionError("Candidate ingestion requires --assessment or --from-dream")
+            assess_data = json.loads(Path(args.assessment).read_text(encoding="utf-8"))
+            if args.command == "scaffold":
+                dev_res = scaffold_candidate(cand_data, assess_data)
+            else:
+                if args.provider in {"auto", "deterministic"}:
+                    raise IngestionError(
+                        "develop requires an explicit model provider; use scaffold"
+                    )
+                dev_res = develop_candidate(
+                    cand_data, assess_data, _provider(args), max_calls=args.max_calls
+                )
+    except (IngestionError, OSError, ValueError) as error:
+        print(f"Ingestion rejected: {error}", file=sys.stderr)
         return 2
 
     out_text = json.dumps(dev_res, indent=2)
@@ -297,7 +315,8 @@ def build_parser() -> argparse.ArgumentParser:
     explore_parser = subparsers.add_parser(
         "explore", aliases=["run", "create"], help="Run full creative exploration pipeline"
     )
-    explore_parser.add_argument("problem", type=str, help="Problem statement to explore")
+    explore_parser.add_argument("--from-dream", type=Path)
+    explore_parser.add_argument("problem", nargs="?", type=str, help="Problem statement to explore")
     explore_parser.add_argument("--ecosystem-fit-weight", type=float, default=0.0)
     explore_parser.add_argument(
         "--provider",
@@ -388,8 +407,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     for name in ("develop", "scaffold"):
         sub = subparsers.add_parser(name, help="Candidate-specific advisory " + name)
-        sub.add_argument("candidate_file")
-        sub.add_argument("--assessment", "-a", required=True)
+        sub.add_argument("candidate_file", nargs="?")
+        sub.add_argument("--from-dream", type=Path)
+        sub.add_argument("--assessment", "-a")
         sub.add_argument("--output", "-o")
         sub.add_argument("--provider", default="auto")
         sub.set_defaults(func=cmd_develop)
