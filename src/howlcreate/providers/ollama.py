@@ -15,6 +15,8 @@ from howl_provider_core import Policy, ProviderError, guarded_opener
 class OllamaProvider(BaseProvider):
     """Local inference provider communicating with Ollama over HTTP."""
 
+    sampling_capabilities = {"temperature": True, "seed": False, "top_p": False}
+
     def __init__(
         self,
         model_name: str = "qwen2.5-coder:7b-instruct",

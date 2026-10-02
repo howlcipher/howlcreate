@@ -14,17 +14,11 @@ def export_dream_candidate(record: RunRecord, candidate_id: str):
         {
             "id": f"{idea.id}/claim/mechanism",
             "candidate_id": idea.id,
-            "kind": (
-                idea.epistemic_status.value
-                if idea.epistemic_status
-                else "HYPOTHESIS"
-            ),
+            "kind": (idea.epistemic_status.value if idea.epistemic_status else "HYPOTHESIS"),
             "text": f"{idea.title}: {idea.core_mechanism or idea.description}",
             "status": "UNVERIFIED",
             "epistemic_status": (
-                idea.epistemic_status.value
-                if idea.epistemic_status
-                else "HYPOTHESIS"
+                idea.epistemic_status.value if idea.epistemic_status else "HYPOTHESIS"
             ),
             "extractor": "howlcreate_export/v1",
             "confidence": "ADVISORY",
@@ -79,6 +73,7 @@ def export_dream_candidate(record: RunRecord, candidate_id: str):
             "transformations": ["create_candidate_export"],
             "source_idea": source,
             "parent_ids": list(idea.parent_ids),
+            "hard_constraints": list(record.config.get("hard_constraints") or []),
             "execution": idea.provenance.get("execution"),
             "source_run_id": record.run_id,
             "source_run_path": record.metadata.get("storage_path"),

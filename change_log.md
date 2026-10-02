@@ -15,3 +15,14 @@ provider-backed develop. The former template behavior is now scaffold; the two-a
 Python API is deprecated. Removed fixed domain branches and fixture substring routing;
 strategic_fit now scores the user's objective, with optional explicit ecosystem weighting.
 Runtime dependencies now include pinned howl-provider-core and jsonschema.
+
+## Resilience hardening (2026-10-02)
+
+- Added one bounded budgeted structured repair, usage preservation and sampling records.
+- Added atomic phase checkpoints and compatible same-provider resume with retained IDs/history.
+- Optional malformed later phases and partial evaluations may converge valid surviving work.
+- Added compact Create constraint metadata to the existing advisory Dream handoff.
+
+- Resume retains prior valid finalists and decisions when recovery stops before new convergence.
+
+- Pin provider-core nested CLI response-shape telemetry fix.

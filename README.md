@@ -141,3 +141,52 @@ Typed Dream exports preserve source identities and provenance. See
 
 Verification CI sets `HOWL_FORBID_LOCAL_INFERENCE=1`. The shared provider dependency
 is pinned to its final reviewed commit, including portable command-provider tests.
+
+## Recovery and bounded repair
+
+```bash
+export HOWL_FORBID_LOCAL_INFERENCE=1
+howlcreate explore "Design an accessible museum queue" --provider deterministic \
+  --repair-attempts 1 --max-calls 32 --format json --output run.json
+howlcreate resume run.json --provider deterministic --output resumed.json
+```
+
+For a reviewed remote command, replace the provider with `--provider command
+--command-config /absolute/path/profile.json`. The same explicit profile must be
+supplied on resume; generated artifacts never select executable commands. Use
+provider-core's `claude-json`, `openai-json`, `gemini-json`, `generic-json`, or raw
+text adapters as appropriate to actual CLI output. Model/usage/cost come from
+reported output, never the configured model label.
+
+Structured responses have at most one schema-only repair call (disable with
+`--repair-attempts 0`). Original and repaired attempts have separate execution
+records and consume the same finite call budget. Failed parsing preserves known
+usage/cost and bounded redacted decoded output plus its hash. Repair does not
+invite creative regeneration. A repair call can add cost; no savings are assumed.
+
+Atomic private JSON checkpoints persist at operator boundaries and pre-convergence.
+They retain run/idea IDs, graph, assumptions, completed phases, mutation seed IDs,
+constraints, scores, budget and execution history. Checkpoints use
+`howlcreate.checkpoint/v1`; older saved reports cannot resume. Resume retains the
+original total call limit and verifies provider identity/profile hash. It skips
+completed phases and already-scored concepts, appending new execution records.
+A failed resume retains prior valid finalists and decisions, explicitly marked
+`retained_finalists_from_checkpoint` until convergence refreshes them.
+There is one writer per run; concurrent resume is unsupported. A crash during an
+uncheckpointed in-flight call can leave its usage unknown; it cannot recover a
+remote receipt that was never received. Historical phase failures remain visible and
+keep a resumed run PARTIAL even after recovery. A fully completed interrupted run
+can be COMPLETE; its interruption stays in resume_history rather than the active stop reason.
+
+If a later optional phase has malformed output after repair, surviving valid
+concepts can converge. Finalists require valid evaluations and hard-constraint
+eligibility. Failed evaluation batches retain earlier scores; unevaluated ideas
+cannot become finalists. Status stays PARTIAL with completion_detail
+PARTIAL_WITH_FINALISTS or PARTIAL_NO_FINALISTS and named phase failures.
+Authentication/session/cancellation/budget failures dispatch no recovery calls.
+No provider fallback is discovered or authorized automatically.
+
+Executions record sampling requested/supported/applied. Commands and deterministic
+fixtures do not claim sampling control; HTTP applied means transmitted in the
+request, not independently verified backend behavior. Unknown usage/cost remains
+unknown. This is a recovery workflow, not evidence that partial runs equal full runs.
