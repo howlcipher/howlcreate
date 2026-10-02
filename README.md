@@ -170,6 +170,8 @@ constraints, scores, budget and execution history. Checkpoints use
 `howlcreate.checkpoint/v1`; older saved reports cannot resume. Resume retains the
 original total call limit and verifies provider identity/profile hash. It skips
 completed phases and already-scored concepts, appending new execution records.
+A failed resume retains prior valid finalists and decisions, explicitly marked
+`retained_finalists_from_checkpoint` until convergence refreshes them.
 There is one writer per run; concurrent resume is unsupported. A crash during an
 uncheckpointed in-flight call can leave its usage unknown; it cannot recover a
 remote receipt that was never received. Historical phase failures remain visible and

@@ -22,3 +22,5 @@ Runtime dependencies now include pinned howl-provider-core and jsonschema.
 - Added atomic phase checkpoints and compatible same-provider resume with retained IDs/history.
 - Optional malformed later phases and partial evaluations may converge valid surviving work.
 - Added compact Create constraint metadata to the existing advisory Dream handoff.
+
+- Resume retains prior valid finalists and decisions when recovery stops before new convergence.

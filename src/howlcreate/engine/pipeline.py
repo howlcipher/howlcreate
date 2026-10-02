@@ -217,8 +217,8 @@ class CreativePipeline:
             raise ValueError("checkpoint budget history is inconsistent")
         # Persist the original mutation context IDs, so resume does not change its seed pool.
         record.metadata.update(status="RUNNING")
-        record.finalist_ids = []
-        record.decisions = {}
+        if record.finalist_ids:
+            record.metadata["retained_finalists_from_checkpoint"] = True
         checkpoint()
         can_converge = True
         try:
@@ -299,6 +299,7 @@ class CreativePipeline:
                         ),
                     )
                 record.finalist_ids = [idea.id for idea in finalists]
+                record.metadata["retained_finalists_from_checkpoint"] = False
                 record.decisions = decisions
                 record.metadata["status"] = (
                     "PARTIAL" if failures else ("COMPLETE" if finalists else "NO_VIABLE_CANDIDATES")

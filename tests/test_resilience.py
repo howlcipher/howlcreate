@@ -199,3 +199,24 @@ def test_fallback_respects_disabled_repair():
     assert len(source.prompts) == 1
     assert len(tracked.executions) == 2
     assert not tracked.executions[0]["repair_attempted"]
+
+
+def test_failed_resume_keeps_prior_finalists_and_decisions(tmp_path, monkeypatch):
+    from howl_provider_core import ProviderError
+
+    pipeline = CreativePipeline(PipelineConfig(custom_storage_dir=tmp_path))
+    record = pipeline.execute("Museum queue", LaterFailure())
+    assert record.finalist_ids
+    original_decisions = {key: value.to_dict() for key, value in record.decisions.items()}
+    provider = LaterFailure()
+
+    def fail(operation, prompt, **kwargs):
+        raise ProviderError("session limit reached")
+
+    monkeypatch.setattr(provider, "generate_for", fail)
+    resumed = pipeline.resume(record.run_id, provider)
+    assert resumed.metadata["status"] == "PARTIAL"
+    assert resumed.finalist_ids == record.finalist_ids
+    assert {key: value.to_dict() for key, value in resumed.decisions.items()} == original_decisions
+    assert resumed.metadata["retained_finalists_from_checkpoint"] is True
+    assert resumed.metadata["call_count"] == record.metadata["call_count"] + 1
