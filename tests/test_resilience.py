@@ -117,6 +117,8 @@ def test_interrupt_resume_preserves_ids_and_history(tmp_path):
     assert after.metadata["executions"][:prior_calls] == before["metadata"]["executions"]
     assert after.metadata["call_count"] > prior_calls
     assert after.metadata["status"] == "COMPLETE"
+    assert "stop_reason" not in after.metadata
+    assert after.metadata["resume_history"][0]["prior_stop_reason"] == "INTERRUPTED"
 
 
 def test_incompatible_resume_rejected(tmp_path):

@@ -172,8 +172,9 @@ original total call limit and verifies provider identity/profile hash. It skips
 completed phases and already-scored concepts, appending new execution records.
 There is one writer per run; concurrent resume is unsupported. A crash during an
 uncheckpointed in-flight call can leave its usage unknown; it cannot recover a
-remote receipt that was never received. Historical failures remain visible and
-keep a resumed run PARTIAL even after recovery.
+remote receipt that was never received. Historical phase failures remain visible and
+keep a resumed run PARTIAL even after recovery. A fully completed interrupted run
+can be COMPLETE; its interruption stays in resume_history rather than the active stop reason.
 
 If a later optional phase has malformed output after repair, surviving valid
 concepts can converge. Finalists require valid evaluations and hard-constraint

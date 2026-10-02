@@ -115,6 +115,9 @@ class CreativePipeline:
             {
                 "resumed_at": datetime.now(timezone.utc).isoformat(),
                 "prior_call_count": record.metadata.get("call_count", 0),
+                "prior_status": record.metadata.get("status"),
+                "prior_stop_reason": record.metadata.get("stop_reason"),
+                "prior_failed_phase": record.metadata.get("failed_phase"),
             }
         )
         return self._continue(record, provider)
@@ -300,6 +303,9 @@ class CreativePipeline:
                 record.metadata["status"] = (
                     "PARTIAL" if failures else ("COMPLETE" if finalists else "NO_VIABLE_CANDIDATES")
                 )
+                if record.metadata["status"] == "COMPLETE":
+                    for key in ("stop_reason", "error_type", "failed_phase"):
+                        record.metadata.pop(key, None)
                 if not failures and not finalists:
                     record.metadata["stop_reason"] = "NO_VIABLE_CANDIDATES"
                 if not failures:
