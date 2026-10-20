@@ -105,7 +105,25 @@ howlcreate graph <run-id>
 
 # Export structured JSON for downstream systems (HowlPlane / HowlFrame)
 howlcreate export <run-id> --output concept.json
+
+# Describe the command line for other Howl components (howl.interop/v1)
+howlcreate interop --json
 ```
+
+### Exit codes and output streams
+
+| Code | Meaning |
+| :--- | :--- |
+| 0 | ok |
+| 1 | an exploration or resumed run that did not complete (its record is still written) |
+| 2 | rejected input, unknown run ID, or a provider or input failure |
+| 3 | materialization denied by the sandbox rules |
+
+Results go to stdout (or the `--output` file); status lines such as
+`[Saved] ...` go to stderr, so `howlcreate export <run-id>` can be piped.
+`howlcreate interop --json` prints this table and every command and flag as a
+`howl.interop/v1` descriptor, which `howl doctor` and other Howl components
+check under the [Howl interop contract](https://github.com/howlcipher/howl/blob/main/docs/INTEROP.md).
 
 ---
 

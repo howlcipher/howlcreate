@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+Interop contract: `howlcreate interop --json` prints the `howl.interop/v1`
+descriptor (every command and flag from the live parser, the documents each
+reads and writes, and the exit codes), which HowlPlane and `howl doctor` check.
+Status lines (`[Saved]`, `[Exported]`, `[Materialized]`) now go to stderr so
+stdout carries only results. An unknown run ID passed to `show`, `graph` or
+`export` now exits 2 (rejected input) instead of 1, which remains reserved for
+an exploration that ran but did not complete. The exit codes are documented in
+the README.
+
 Native HowlWriter consumption and sandbox materialization (Run 5 CF04, DF-C2, DF-C4, CF02):
 `develop`/`scaffold --from-writer` validate `howlwriter.copy_package/v1` into a typed
 `writer_copy` slot with Dream/Writer/Create lineage. The new `materialize` command renders a
