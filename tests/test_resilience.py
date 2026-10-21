@@ -220,3 +220,15 @@ def test_failed_resume_keeps_prior_finalists_and_decisions(tmp_path, monkeypatch
     assert {key: value.to_dict() for key, value in resumed.decisions.items()} == original_decisions
     assert resumed.metadata["retained_finalists_from_checkpoint"] is True
     assert resumed.metadata["call_count"] == record.metadata["call_count"] + 1
+
+
+def test_unknown_provider_credentials_removed_from_repair_receipt():
+    provider = Sequence([
+        '{"ideas": "token: bearer syntheticPrivate456 ghp_abcdefghijkl-mnopqrstuvwxyz"}',
+        '{"ideas": []}',
+    ])
+    tracked = TrackedProvider(provider, CallBudget(2), "fixture")
+    tracked.generate_for("mutation", "Return JSON", json_mode=True)
+    receipt = json.dumps(tracked.executions)
+    assert "syntheticPrivate456" not in receipt
+    assert "abcdefghijkl-mnopqrstuvwxyz" not in receipt
