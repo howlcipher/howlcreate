@@ -3,11 +3,18 @@
 import time
 import json
 import hashlib
-import re
 
 from jsonschema import validate, ValidationError
 
-from howl_provider_core import CallBudget, CommandConfig, CommandProvider, Execution, ProviderError
+from howl_provider_core import (
+    CallBudget,
+    CommandConfig,
+    CommandProvider,
+    Execution,
+    ProviderError,
+    redact,
+    secret_env_values,
+)
 
 from howlcreate.providers.base import BaseProvider, ProviderResponse
 
@@ -136,26 +143,10 @@ def response_schema(operation, prompt):
 
 
 def safe_output(text):
-    """Retain bounded decoded output with known credential patterns removed."""
+    """Retain bounded decoded output with credentials removed (howl-provider-core's rules)."""
     import os
 
-    for key, value in os.environ.items():
-        if value and any(
-            marker in key.upper() for marker in ("KEY", "TOKEN", "SECRET", "PASSWORD")
-        ):
-            text = text.replace(value, "[REDACTED]")
-    text = re.sub(
-        r"(?i)(authorization|api[_-]?key|password|token|secret)[\"']?\s*[:=]\s*[\"']?(?:bearer\s+)?[^\s,\"'}]+",
-        r"\1=[REDACTED]",
-        text,
-    )
-    text = re.sub(r"(?:sk-|gh[pousr]_)[A-Za-z0-9_-]{12,}", "[REDACTED]", text)
-    text = re.sub(
-        r"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----",
-        "[REDACTED]",
-        text,
-    )
-    return text[:65536]
+    return redact(text, secret_env_values(os.environ))[:65536]
 
 
 class TrackedProvider(BaseProvider):

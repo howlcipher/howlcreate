@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+Provider output is redacted with howl-provider-core 0.2.0's shared rules
+(`redact`, `secret_env_values`) instead of a local copy, which also catches AWS
+access keys and `github_pat_` tokens. The provider-core pin moves to that release
+(`d5ae6d6`); howldream and howlwriter pin the same commit.
+
 Interop contract: `howlcreate interop --json` prints the `howl.interop/v1`
 descriptor (every command and flag from the live parser, the documents each
 reads and writes, and the exit codes), which HowlPlane and `howl doctor` check.
