@@ -122,7 +122,7 @@ def test_cli_develop(tmp_path: Path):
         str(out_file),
     ]
     res = subprocess.run(cmd, capture_output=True, text=True, check=True)
-    assert "[Saved]" in res.stdout
+    assert "[Saved]" in res.stderr
     assert out_file.exists()
 
     dev_data = json.loads(out_file.read_text())

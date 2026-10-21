@@ -25,6 +25,14 @@ from howlcreate.providers.runtime import RemoteCommandProvider, TrackedProvider,
 from howl_provider_core import CallBudget, CommandConfig
 
 
+# Exit codes (declared in `howlcreate interop --json`). 1 is reserved for an
+# exploration that ran but did not complete; an unknown run or rejected input
+# is 2, so a caller can tell "try again" from "fix the request".
+EXIT_INCOMPLETE = 1
+EXIT_REJECTED = 2
+EXIT_SANDBOX_DENIED = 3
+
+
 def _provider(args):
     def resolve(name):
         if name == "command":
@@ -102,11 +110,11 @@ def cmd_explore(args: argparse.Namespace) -> int:
 
     if args.output:
         Path(args.output).write_text(output_text, encoding="utf-8")
-        print(f"[Saved] Output written to: {args.output}")
+        print(f"[Saved] Output written to: {args.output}", file=sys.stderr)
     else:
         print(output_text)
 
-    return 0 if record.metadata.get("status") == "COMPLETE" else 1
+    return 0 if record.metadata.get("status") == "COMPLETE" else EXIT_INCOMPLETE
 
 
 def cmd_resume(args):
@@ -117,7 +125,7 @@ def cmd_resume(args):
         Path(args.output).write_text(text, encoding="utf-8")
     else:
         print(text)
-    return 0 if record.metadata.get("status") == "COMPLETE" else 1
+    return 0 if record.metadata.get("status") == "COMPLETE" else EXIT_INCOMPLETE
 
 
 def cmd_assumptions(args: argparse.Namespace) -> int:
@@ -174,7 +182,7 @@ def cmd_show(args: argparse.Namespace) -> int:
         record = storage.load_run(args.run_id)
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)
-        return 1
+        return EXIT_REJECTED
 
     if args.format == "json":
         print(json.dumps(record.to_dict(), indent=2))
@@ -190,7 +198,7 @@ def cmd_graph(args: argparse.Namespace) -> int:
         record = storage.load_run(args.run_id)
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)
-        return 1
+        return EXIT_REJECTED
 
     if args.mermaid:
         print(to_mermaid(record.graph))
@@ -208,7 +216,7 @@ def cmd_export(args: argparse.Namespace) -> int:
         record = storage.load_run(args.run_id)
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)
-        return 1
+        return EXIT_REJECTED
 
     if args.target == "plane":
         payload = export_howlplane_contract(record)
@@ -226,7 +234,7 @@ def cmd_export(args: argparse.Namespace) -> int:
     text = json.dumps(payload, indent=2)
     if args.output:
         Path(args.output).write_text(text, encoding="utf-8")
-        print(f"[Exported] Contract written to {args.output}")
+        print(f"[Exported] Contract written to {args.output}", file=sys.stderr)
     else:
         print(text)
     return 0
@@ -309,7 +317,7 @@ def cmd_develop(args: argparse.Namespace) -> int:
                 )
     except (IngestionError, OSError, ValueError) as error:
         print(f"Ingestion rejected: {error}", file=sys.stderr)
-        return 2
+        return EXIT_REJECTED
 
     return _emit_development(dev_res, args)
 
@@ -318,7 +326,7 @@ def _emit_development(dev_res: dict, args: argparse.Namespace) -> int:
     out_text = json.dumps(dev_res, indent=2)
     if args.output:
         Path(args.output).write_text(out_text, encoding="utf-8")
-        print(f"[Saved] Development plan written to: {args.output}")
+        print(f"[Saved] Development plan written to: {args.output}", file=sys.stderr)
     else:
         print(out_text)
     return 0
@@ -337,14 +345,23 @@ def cmd_materialize(args: argparse.Namespace) -> int:
         )
     except SandboxError as error:
         print(f"Materialization denied: {error}", file=sys.stderr)
-        return 3
+        return EXIT_SANDBOX_DENIED
     except (IngestionError, OSError, ValueError) as error:
         print(f"Materialization rejected: {error}", file=sys.stderr)
-        return 2
+        return EXIT_REJECTED
     print(
         f"[Materialized] {len(manifest['artifacts'])} artifacts into {manifest['output_dir']} "
-        f"({manifest['materialization_id']}); manifest: {MANIFEST_NAME}"
+        f"({manifest['materialization_id']}); manifest: {MANIFEST_NAME}",
+        file=sys.stderr,
     )
+    return 0
+
+
+def cmd_interop(args: argparse.Namespace) -> int:
+    """Print the howl.interop/v1 descriptor other Howl components check."""
+    from howlcreate.interop_descriptor import describe
+
+    print(json.dumps(describe(build_parser()), indent=2))
     return 0
 
 
@@ -477,6 +494,12 @@ def build_parser() -> argparse.ArgumentParser:
     mat.add_argument("--replace", action="store_true", help="Allow a non-empty output directory")
     mat.set_defaults(func=cmd_materialize)
 
+    interop_parser = subparsers.add_parser(
+        "interop", help="Print the howl.interop/v1 descriptor other Howl components check"
+    )
+    interop_parser.add_argument("--json", action="store_true", help="JSON output (the default)")
+    interop_parser.set_defaults(func=cmd_interop)
+
     for sub in set(subparsers.choices.values()):
         if any(action.dest == "provider" for action in sub._actions):
             sub.add_argument(
@@ -506,7 +529,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         except (ValueError, RuntimeError, OSError) as error:
             message = str(error) if isinstance(error, ValueError) else "Provider or input failed"
             print(f"Error: {message}", file=sys.stderr)
-            return 2
+            return EXIT_REJECTED
 
     return 0
 
