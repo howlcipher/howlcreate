@@ -12,7 +12,7 @@ license = "MIT"
 authors = [
     { name = "howlcipher" }
 ]
-dependencies = ["howl-provider-core @ git+https://github.com/howlcipher/howl-provider-core.git@d5ae6d696d95bebd799e9ae51fc18b7622e2c985", "jsonschema>=4.20,<5"]
+dependencies = ["howl-provider-core @ git+https://github.com/howlcipher/howl-provider-core.git@9bf1f78d95974cb826c1114552e4e34933428bf9", "jsonschema>=4.20,<5"]
 
 [project.optional-dependencies]
 dev = [
