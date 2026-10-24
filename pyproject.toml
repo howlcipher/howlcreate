@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "howlcreate"
-version = "0.2.0"
+version = "0.2.1"
 description = "Computational creativity and open-ended problem solving layer for the Howl ecosystem."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -12,7 +12,7 @@ license = "MIT"
 authors = [
     { name = "howlcipher" }
 ]
-dependencies = ["howl-provider-core @ git+https://github.com/howlcipher/howl-provider-core.git@9bf1f78d95974cb826c1114552e4e34933428bf9", "jsonschema>=4.20,<5"]
+dependencies = ["howl-provider-core @ git+https://github.com/howlcipher/howl-provider-core.git@v0.2.1", "jsonschema>=4.20,<5"]
 
 [project.optional-dependencies]
 dev = [

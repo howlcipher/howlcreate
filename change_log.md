@@ -1,6 +1,6 @@
 # Change log
 
-## Unreleased
+## 0.2.1
 
 Provider output is redacted with howl-provider-core 0.2.0's shared rules
 (`redact`, `secret_env_values`) instead of a local copy, which also catches AWS
