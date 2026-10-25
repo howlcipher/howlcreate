@@ -28,6 +28,18 @@ def test_descriptor_shape(capsys):
             assert SCHEMA_ID.match(schema), schema
 
 
+def test_version_matches_pyproject():
+    from pathlib import Path
+    try:
+        import tomllib
+    except ImportError:
+        import tomli as tomllib
+    pyproject_path = Path(__file__).resolve().parent.parent / "pyproject.toml"
+    with open(pyproject_path, "rb") as f:
+        data = tomllib.load(f)
+    assert __version__ == data["project"]["version"]
+
+
 def test_every_subcommand_and_flag_is_described(capsys):
     described = {tuple(c["path"]): set(c["flags"]) for c in describe(capsys)["commands"]}
     parser = build_parser()
